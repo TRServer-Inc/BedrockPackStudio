@@ -13,7 +13,6 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
-        // Android için güvenli başlangıç
         BackgroundColor = Color.FromArgb("#101114");
     }
 
@@ -37,17 +36,33 @@ public partial class MainPage : ContentPage
         switch (action)
         {
             case "🖼️ Texture Editor":
-                OpenTextureEditor();
+                await OpenTextureEditor();
                 break;
 
             case "</> Kod Editor":
-                OpenCodeEditor();
+                await OpenCodeEditor();
                 break;
 
             case "📦 Yeni Pack":
                 await DisplayAlert(
                     "Yeni Pack",
                     "Yeni resource pack oluşturma sistemi hazırlanıyor.",
+                    "Tamam"
+                );
+                break;
+
+            case "📂 Proje Aç":
+                await DisplayAlert(
+                    "Proje Aç",
+                    "Proje açma sistemi sonraki aşamada eklenecek.",
+                    "Tamam"
+                );
+                break;
+
+            case "⚙️ Ayarlar":
+                await DisplayAlert(
+                    "Ayarlar",
+                    "Tema, Minecraft sürümü ve editör ayarları burada olacak.",
                     "Tamam"
                 );
                 break;
@@ -69,13 +84,16 @@ public partial class MainPage : ContentPage
     // HOME
     // =========================================================
 
-    private void OnHomeClicked(object sender, EventArgs e)
+    private async void OnHomeClicked(object sender, EventArgs e)
     {
-        MainScroll.ScrollToAsync(
-            0,
-            0,
-            false
-        );
+        if (MainScroll != null)
+        {
+            await MainScroll.ScrollToAsync(
+                0,
+                0,
+                false
+            );
+        }
     }
 
     private async void OnPackClicked(object sender, EventArgs e)
@@ -113,11 +131,11 @@ public partial class MainPage : ContentPage
 
         if (action == "📄 manifest.json")
         {
-            OpenCodeEditor();
+            await OpenCodeEditor();
         }
         else if (action == "📁 textures")
         {
-            OpenTextureEditor();
+            await OpenTextureEditor();
         }
     }
 
@@ -125,12 +143,12 @@ public partial class MainPage : ContentPage
     // TEXTURE EDITOR
     // =========================================================
 
-    private void OnTextureClicked(object sender, EventArgs e)
+    private async void OnTextureClicked(object sender, EventArgs e)
     {
-        OpenTextureEditor();
+        await OpenTextureEditor();
     }
 
-    private async void OpenTextureEditor()
+    private async Task OpenTextureEditor()
     {
         await Navigation.PushAsync(
             new TextureEditorPage()
@@ -141,12 +159,12 @@ public partial class MainPage : ContentPage
     // CODE EDITOR
     // =========================================================
 
-    private void OnCodeClicked(object sender, EventArgs e)
+    private async void OnCodeClicked(object sender, EventArgs e)
     {
-        OpenCodeEditor();
+        await OpenCodeEditor();
     }
 
-    private async void OpenCodeEditor()
+    private async Task OpenCodeEditor()
     {
         await Navigation.PushAsync(
             new CodeEditorPage()
@@ -175,7 +193,8 @@ public partial class MainPage : ContentPage
                 header = new
                 {
                     name = "Test Pack",
-                    description = "Bedrock Pack Studio tarafından oluşturuldu.",
+                    description =
+                        "Bedrock Pack Studio tarafından oluşturuldu.",
                     uuid = Guid.NewGuid().ToString(),
                     version = new[] { 1, 0, 0 },
                     min_engine_version = new[] { 1, 20, 0 }
@@ -216,7 +235,9 @@ public partial class MainPage : ContentPage
             );
 
             if (File.Exists(finalPath))
+            {
                 File.Delete(finalPath);
+            }
 
             ZipFile.CreateFromDirectory(
                 tempDir,
@@ -230,11 +251,12 @@ public partial class MainPage : ContentPage
 
             _lastGeneratedPackPath = finalPath;
 
-            PackStatusLabel.Text =
-                "✓ .mcpack hazır";
-
-            PackStatusLabel.TextColor =
-                Color.FromArgb("#4EC9B0");
+            if (PackStatusLabel != null)
+            {
+                PackStatusLabel.Text = "✓ .mcpack hazır";
+                PackStatusLabel.TextColor =
+                    Color.FromArgb("#4EC9B0");
+            }
 
             await DisplayAlert(
                 "Başarılı 🎉",
