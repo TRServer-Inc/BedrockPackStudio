@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;
 
 namespace BedrockPackStudio
 {
@@ -32,11 +33,9 @@ namespace BedrockPackStudio
                 StatusLabel.Text = "Paket hazırlanıyor...";
                 StatusLabel.TextColor = Colors.Yellow;
 
-                // Geçici çalışma dizini
                 string tempDir = Path.Combine(FileSystem.CacheDirectory, "PackBuild_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
 
-                // manifest.json oluşturma
                 var manifestData = new
                 {
                     format_version = 2,
@@ -62,7 +61,6 @@ namespace BedrockPackStudio
                 string manifestJson = JsonSerializer.Serialize(manifestData, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(tempDir, "manifest.json"), manifestJson);
 
-                // Hedef .mcpack dosyası
                 string outputDir = FileSystem.AppDataDirectory;
                 string packFileName = $"{packName.Replace(" ", "_")}.mcpack";
                 string finalPackPath = Path.Combine(outputDir, packFileName);
@@ -70,23 +68,20 @@ namespace BedrockPackStudio
                 if (File.Exists(finalPackPath))
                     File.Delete(finalPackPath);
 
-                // Zip olarak paketle (.mcpack)
                 ZipFile.CreateFromDirectory(tempDir, finalPackPath);
-
-                // Temizlik
                 Directory.Delete(tempDir, true);
 
                 _lastGeneratedPackPath = finalPackPath;
                 StatusLabel.Text = $"Başarıyla Oluşturuldu: {packFileName}";
                 StatusLabel.TextColor = Colors.LightGreen;
 
-                await DisplayAlert("Başarılı", $"Paket oluşturuldu!\nKonum: {packFileName}", "Harika");
+                await DisplayAlert("Başarılı", $"Paket oluşturuldu!\nDosya: {packFileName}", "Tamam");
             }
             catch (Exception ex)
             {
                 StatusLabel.Text = "Hata oluştu!";
                 StatusLabel.TextColor = Colors.Red;
-                await DisplayAlert("Hata", $"Paket oluşturulurken bir sorun çıktı: {ex.Message}", "Tamam");
+                await DisplayAlert("Hata", $"Paket oluşturulurken sorun çıktı: {ex.Message}", "Tamam");
             }
         }
 
