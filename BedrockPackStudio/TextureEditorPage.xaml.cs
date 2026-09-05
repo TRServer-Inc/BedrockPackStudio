@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Maui.Graphics;
 
 namespace BedrockPackStudio;
@@ -7,11 +9,8 @@ public partial class TextureEditorPage : ContentPage
 {
     private readonly PixelData _pixelData;
 
-    private readonly Stack<Color[,]> _undo =
-        new();
-
-    private readonly Stack<Color[,]> _redo =
-        new();
+    private readonly Stack<Color[,]> _undo = new();
+    private readonly Stack<Color[,]> _redo = new();
 
     private Color _currentColor = Colors.White;
 
@@ -38,10 +37,13 @@ public partial class TextureEditorPage : ContentPage
         object? sender,
         TouchEventArgs e)
     {
-        if (e.Touches.Count == 0)
+        if (e.Touches == null ||
+            !e.Touches.Any())
+        {
             return;
+        }
 
-        var touch = e.Touches[0];
+        var touch = e.Touches.First();
 
         float canvasX = touch.X;
         float canvasY = touch.Y;
@@ -52,11 +54,20 @@ public partial class TextureEditorPage : ContentPage
                 (float)PixelCanvas.Height / 16f
             );
 
+        if (pixelSize <= 0)
+            return;
+
         float startX =
-            (float)(PixelCanvas.Width - pixelSize * 16) / 2;
+            (float)(
+                PixelCanvas.Width -
+                pixelSize * 16
+            ) / 2;
 
         float startY =
-            (float)(PixelCanvas.Height - pixelSize * 16) / 2;
+            (float)(
+                PixelCanvas.Height -
+                pixelSize * 16
+            ) / 2;
 
         int x =
             (int)((canvasX - startX) / pixelSize);
@@ -66,26 +77,32 @@ public partial class TextureEditorPage : ContentPage
 
         if (x < 0 || x >= 16 ||
             y < 0 || y >= 16)
+        {
             return;
+        }
 
         SaveUndo();
 
         switch (_tool)
         {
             case EditTool.Pen:
+
                 _pixelData.Set(
                     x,
                     y,
                     _currentColor
                 );
+
                 break;
 
             case EditTool.Eraser:
+
                 _pixelData.Set(
                     x,
                     y,
                     Colors.Transparent
                 );
+
                 break;
 
             case EditTool.Picker:
@@ -157,20 +174,26 @@ public partial class TextureEditorPage : ContentPage
         ColorEntry.Focus();
     }
 
-    private void OnApplyColorClicked(
+    private async void OnApplyColorClicked(
         object sender,
         EventArgs e)
     {
         try
         {
+            string text =
+                ColorEntry.Text?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new FormatException();
+            }
+
             _currentColor =
-                Color.FromArgb(
-                    ColorEntry.Text.Trim()
-                );
+                Color.FromArgb(text);
         }
         catch
         {
-            DisplayAlert(
+            await DisplayAlert(
                 "Hatalı Renk",
                 "Örnek: #FF0000",
                 "Tamam"
@@ -235,7 +258,8 @@ public partial class TextureEditorPage : ContentPage
         object sender,
         EventArgs e)
     {
-        if (PixelCanvas.Drawable is PixelDrawable drawable)
+        if (PixelCanvas.Drawable
+            is PixelDrawable drawable)
         {
             drawable.ShowGrid =
                 !drawable.ShowGrid;
@@ -279,6 +303,10 @@ public partial class TextureEditorPage : ContentPage
         return $"#{r:X2}{g:X2}{b:X2}";
     }
 }
+
+// =========================================================
+// EDIT TOOL
+// =========================================================
 
 public enum EditTool
 {
