@@ -2,7 +2,7 @@ using Microsoft.Maui.Graphics;
 
 namespace BedrockPackStudio;
 
-public class PixelDrawable : IDrawable
+public sealed class PixelDrawable : IDrawable
 {
     private readonly PixelData _data;
 
@@ -18,18 +18,12 @@ public class PixelDrawable : IDrawable
         ICanvas canvas,
         RectF dirtyRect)
     {
-        canvas.FillColor =
-            Color.FromArgb("#1B1D22");
-
-        canvas.FillRectangle(
-            dirtyRect
-        );
+        canvas.SaveState();
 
         float pixelSize =
             Math.Min(
                 dirtyRect.Width / _data.Width,
-                dirtyRect.Height / _data.Height
-            );
+                dirtyRect.Height / _data.Height);
 
         float totalWidth =
             pixelSize * _data.Width;
@@ -38,90 +32,90 @@ public class PixelDrawable : IDrawable
             pixelSize * _data.Height;
 
         float startX =
-            (dirtyRect.Width - totalWidth) / 2;
+            dirtyRect.X +
+            (dirtyRect.Width - totalWidth) / 2f;
 
         float startY =
-            (dirtyRect.Height - totalHeight) / 2;
+            dirtyRect.Y +
+            (dirtyRect.Height - totalHeight) / 2f;
 
+        canvas.FillColor =
+            Color.FromArgb("#202329");
 
-        // PIXELS
-        for (int y = 0; y < _data.Height; y++)
+        canvas.FillRectangle(
+            dirtyRect);
+
+        for (int y = 0;
+             y < _data.Height;
+             y++)
         {
-            for (int x = 0; x < _data.Width; x++)
+            for (int x = 0;
+                 x < _data.Width;
+                 x++)
             {
                 Color color =
                     _data.Get(x, y);
 
                 float px =
-                    startX + x * pixelSize;
+                    startX +
+                    x * pixelSize;
 
                 float py =
-                    startY + y * pixelSize;
+                    startY +
+                    y * pixelSize;
 
-                if (color != Colors.Transparent)
-                {
-                    canvas.FillColor =
-                        color;
+                canvas.FillColor =
+                    color;
 
-                    canvas.FillRectangle(
-                        px,
-                        py,
-                        pixelSize,
-                        pixelSize
-                    );
-                }
-                else
-                {
-                    // Şeffaf pixel checkerboard
-                    canvas.FillColor =
-                        ((x + y) % 2 == 0)
-                            ? Color.FromArgb("#3A3D43")
-                            : Color.FromArgb("#303339");
-
-                    canvas.FillRectangle(
-                        px,
-                        py,
-                        pixelSize,
-                        pixelSize
-                    );
-                }
+                canvas.FillRectangle(
+                    px,
+                    py,
+                    pixelSize,
+                    pixelSize);
             }
         }
 
-
-        // GRID
         if (ShowGrid)
         {
             canvas.StrokeColor =
-                Color.FromArgb("#555A63");
+                Color.FromArgb("#555B65");
 
-            canvas.StrokeSize = 0.7f;
+            canvas.StrokeSize =
+                Math.Max(
+                    0.5f,
+                    pixelSize / 16f);
 
-            for (int x = 0; x <= _data.Width; x++)
+            for (int x = 0;
+                 x <= _data.Width;
+                 x++)
             {
                 float px =
-                    startX + x * pixelSize;
+                    startX +
+                    x * pixelSize;
 
                 canvas.DrawLine(
                     px,
                     startY,
                     px,
-                    startY + totalHeight
-                );
+                    startY + totalHeight);
             }
 
-            for (int y = 0; y <= _data.Height; y++)
+            for (int y = 0;
+                 y <= _data.Height;
+                 y++)
             {
                 float py =
-                    startY + y * pixelSize;
+                    startY +
+                    y * pixelSize;
 
                 canvas.DrawLine(
                     startX,
                     py,
                     startX + totalWidth,
-                    py
-                );
+                    py);
             }
         }
+
+        canvas.RestoreState();
     }
 }
