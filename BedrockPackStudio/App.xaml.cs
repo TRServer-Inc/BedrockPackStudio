@@ -1,5 +1,3 @@
-using Microsoft.Maui.Controls;
-
 namespace BedrockPackStudio
 {
     public partial class App : Application
@@ -7,7 +5,11 @@ namespace BedrockPackStudio
         public App()
         {
             InitializeComponent();
-            MainPage = new MainPage();
+        }
+
+        protected override Window CreateWindow(IActivationState? activationState)
+        {
+            return new Window(new AppShell());
         }
     }
 }
