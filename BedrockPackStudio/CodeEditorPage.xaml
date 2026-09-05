@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="BedrockPackStudio.CodeEditorPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#101114"
+    NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- HEADER -->
+
+        <Grid
+            Grid.Row="0"
+            HeightRequest="60"
+            Padding="10"
+            BackgroundColor="#181A1F"
+            ColumnDefinitions="Auto,*,Auto">
+
+            <Button
+                Text="‹"
+                FontSize="32"
+                TextColor="White"
+                BackgroundColor="Transparent"
+                Clicked="OnBackClicked"/>
+
+            <Label
+                Grid.Column="1"
+                Text="manifest.json"
+                FontSize="17"
+                FontAttributes="Bold"
+                TextColor="White"
+                VerticalOptions="Center"/>
+
+            <Button
+                Grid.Column="2"
+                Text="💾"
+                FontSize="21"
+                TextColor="White"
+                BackgroundColor="Transparent"
+                Clicked="OnSaveClicked"/>
+
+        </Grid>
+
+
+        <!-- EDITOR -->
+
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="42,*"
+            BackgroundColor="#0D0E10">
+
+            <!-- LINE NUMBERS -->
+
+            <ScrollView
+                Grid.Column="0"
+                BackgroundColor="#15171B">
+
+                <Label
+                    x:Name="LineNumbers"
+                    Text="1&#x0a;2&#x0a;3&#x0a;4&#x0a;5&#x0a;6&#x0a;7&#x0a;8&#x0a;9&#x0a;10&#x0a;11&#x0a;12&#x0a;13&#x0a;14&#x0a;15"
+                    TextColor="#626873"
+                    FontFamily="monospace"
+                    FontSize="13"
+                    Padding="8,14"/>
+            </ScrollView>
+
+
+            <!-- CODE -->
+
+            <ScrollView
+                Grid.Column="1"
+                HorizontalScrollBarVisibility="Always"
+                VerticalScrollBarVisibility="Always">
+
+                <Editor
+                    x:Name="CodeEditor"
+                    TextColor="#D4D4D4"
+                    BackgroundColor="#0D0E10"
+                    FontFamily="monospace"
+                    FontSize="13"
+                    AutoSize="TextChanges"
+                    TextChanged="OnTextChanged"
+                    Keyboard="Text"/>
+            </ScrollView>
+
+        </Grid>
+
+
+        <!-- TOOLBAR -->
+
+        <HorizontalStackLayout
+            Grid.Row="2"
+            HeightRequest="62"
+            Padding="8"
+            Spacing="8"
+            BackgroundColor="#181A1F">
+
+            <Button
+                Text="↶"
+                FontSize="21"
+                WidthRequest="50"
+                BackgroundColor="#20242B"
+                TextColor="White"
+                Clicked="OnUndoClicked"/>
+
+            <Button
+                Text="↷"
+                FontSize="21"
+                WidthRequest="50"
+                BackgroundColor="#20242B"
+                TextColor="White"
+                Clicked="OnRedoClicked"/>
+
+            <Button
+                Text="{ }"
+                WidthRequest="55"
+                BackgroundColor="#20242B"
+                TextColor="White"
+                Clicked="OnFormatClicked"/>
+
+            <Button
+                Text="✓ JSON"
+                WidthRequest="75"
+                BackgroundColor="#176B43"
+                TextColor="White"
+                Clicked="OnValidateClicked"/>
+
+        </HorizontalStackLayout>
+
+    </Grid>
+
+</ContentPage>
