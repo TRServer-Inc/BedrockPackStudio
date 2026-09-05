@@ -7,11 +7,11 @@ on:
       - master
   release:
     types: [published]
-  workflow_dispatch: # github üzerinden elle (manual) başlatabilmek için
+  workflow_dispatch:
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Repositoriyi Klonla
@@ -20,7 +20,7 @@ jobs:
       - name: .NET SDK Kurulumu
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # projenin kullandığı .net sürümüne göre değiştirebilirsin (örneğin 9.0.x)
+          dotnet-version: '8.0.x'
 
       - name: Android Workload Kurulumu
         run: dotnet workload install android
@@ -41,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BedrockPackStudio-Android-APK
-          path: '**/bin/Release/*/*-Signed.apk' # derlenen apk yolunu otomatik bulur
+          path: '**/bin/Release/*/*-Signed.apk'
