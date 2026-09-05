@@ -1,677 +1,237 @@
-using System;
-using System.IO;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Layouts;
+using Microsoft.Maui.ApplicationModel.DataTransfer;
 using System.IO.Compression;
 using System.Text.Json;
 
-namespace BedrockPackStudio;
-
-public partial class MainPage : ContentPage
+namespace BedrockPackStudio
 {
-    private string _lastGeneratedPackPath = string.Empty;
-
-    public MainPage()
+    public class MainPage : ContentPage
     {
-        InitializeComponent();
+        private Grid _mainLayout;
+        private bool _uiLoaded = false;
 
-        BackgroundColor =
-            Color.FromArgb("#101114");
+        private Editor _projectNameEditor;
+        private Image _packIconSourceImage;
+        private string _selectedImagePath = string.Empty;
 
-        Log("Bedrock Pack Studio başlatıldı.");
-    }
-
-    // =========================================================
-    // MENU
-    // =========================================================
-
-    private async void OnMenuClicked(
-        object sender,
-        EventArgs e)
-    {
-        string action =
-            await DisplayActionSheet(
-                "Bedrock Pack Studio",
-                "İptal",
-                null,
-                "📂 Proje Aç",
-                "📦 Yeni Pack",
-                "🖼️ Texture Editor",
-                "</> Kod Editor",
-                "⚙️ Ayarlar");
-
-        switch (action)
+        public MainPage()
         {
-            case "📂 Proje Aç":
-                await OpenProject();
-                break;
+            // Arka planı siyah kalmasın diye açıkça beyaz yapıyoruz
+            BackgroundColor = Colors.White;
 
-            case "📦 Yeni Pack":
-                await CreateNewPack();
-                break;
-
-            case "🖼️ Texture Editor":
-                await OpenTextureEditor();
-                break;
-
-            case "</> Kod Editor":
-                await OpenCodeEditor();
-                break;
-
-            case "⚙️ Ayarlar":
-                await OpenSettings();
-                break;
-        }
-    }
-
-    private async void OnMoreClicked(
-        object sender,
-        EventArgs e)
-    {
-        string action =
-            await DisplayActionSheet(
-                "Seçenekler",
-                "Kapat",
-                null,
-                "ℹ️ Hakkında",
-                "🐛 Hata Raporla");
-
-        switch (action)
-        {
-            case "ℹ️ Hakkında":
-
-                await DisplayAlert(
-                    "Bedrock Pack Studio",
-                    "Minecraft Bedrock Resource Pack Editor\n\n" +
-                    "Mobil Edition",
-                    "Tamam");
-
-                break;
-
-            case "🐛 Hata Raporla":
-
-                await DisplayAlert(
-                    "Hata Raporla",
-                    "Hata raporlama sistemi yakında eklenecek.",
-                    "Tamam");
-
-                break;
-        }
-    }
-
-    // =========================================================
-    // HOME
-    // =========================================================
-
-    private async void OnHomeClicked(
-        object sender,
-        EventArgs e)
-    {
-        await MainScroll.ScrollToAsync(
-            0,
-            0,
-            false);
-    }
-
-    private async void OnPackClicked(
-        object sender,
-        EventArgs e)
-    {
-        await DisplayAlert(
-            "Pack",
-            "Pack Explorer burada olacak.",
-            "Tamam");
-    }
-
-    private async void OnSettingsClicked(
-        object sender,
-        EventArgs e)
-    {
-        await OpenSettings();
-    }
-
-    // =========================================================
-    // PROJECT
-    // =========================================================
-
-    private async void OnOpenProjectClicked(
-        object sender,
-        EventArgs e)
-    {
-        await OpenProject();
-    }
-
-    private async Task OpenProject()
-    {
-        try
-        {
-            FileResult? result =
-                await FilePicker.Default.PickAsync(
-                    new PickOptions
-                    {
-                        PickerTitle =
-                            "manifest.json seç"
-                    });
-
-            if (result == null)
-                return;
-
-            Log(
-                $"Seçilen dosya: {result.FileName}");
-
-            await DisplayAlert(
-                "Proje",
-                $"{result.FileName} seçildi.\n\n" +
-                "Android dosya erişimi için proje içe aktarma sistemi sonraki aşamada bağlanacak.",
-                "Tamam");
-        }
-        catch (Exception ex)
-        {
-            Log(
-                "Proje açma hatası: " +
-                ex.Message);
-
-            await DisplayAlert(
-                "Hata",
-                ex.Message,
-                "Tamam");
-        }
-    }
-
-    private async void OnNewPackClicked(
-        object sender,
-        EventArgs e)
-    {
-        await CreateNewPack();
-    }
-
-    private async Task CreateNewPack()
-    {
-        string packName =
-            "My Resource Pack";
-
-        string root =
-            Path.Combine(
-                FileSystem.AppDataDirectory,
-                "Projects");
-
-        string project =
-            Path.Combine(
-                root,
-                packName);
-
-        try
-        {
-            Directory.CreateDirectory(
-                project);
-
-            Directory.CreateDirectory(
-                Path.Combine(
-                    project,
-                    "textures"));
-
-            Directory.CreateDirectory(
-                Path.Combine(
-                    project,
-                    "textures",
-                    "blocks"));
-
-            Directory.CreateDirectory(
-                Path.Combine(
-                    project,
-                    "textures",
-                    "items"));
-
-            var manifest = new
+            _mainLayout = new Grid
             {
-                format_version = 2,
-
-                header = new
-                {
-                    name = packName,
-                    description =
-                        "Bedrock Pack Studio ile oluşturuldu.",
-                    uuid =
-                        Guid.NewGuid().ToString(),
-                    version =
-                        new[]
-                        {
-                            1,
-                            0,
-                            0
-                        },
-                    min_engine_version =
-                        new[]
-                        {
-                            1,
-                            20,
-                            0
-                        }
-                },
-
-                modules = new[]
-                {
-                    new
-                    {
-                        type = "resources",
-                        uuid =
-                            Guid.NewGuid().ToString(),
-                        version =
-                            new[]
-                            {
-                                1,
-                                0,
-                                0
-                            }
-                    }
-                }
+                RowDefinitions = new RowDefinitionCollection { new RowDefinition(GridLength.Star) },
+                ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Star) },
+                BackgroundColor = Colors.White
             };
 
-            string json =
-                JsonSerializer.Serialize(
-                    manifest,
-                    new JsonSerializerOptions
-                    {
-                        WriteIndented = true
-                    });
-
-            await File.WriteAllTextAsync(
-                Path.Combine(
-                    project,
-                    "manifest.json"),
-                json);
-
-            ProjectContext.CurrentProjectPath =
-                project;
-
-            ProjectContext.CurrentFilePath =
-                Path.Combine(
-                    project,
-                    "manifest.json");
-
-            ProjectContext.CurrentTexturePath =
-                null;
-
-            ProjectNameLabel.Text =
-                packName;
-
-            ProjectTypeLabel.Text =
-                "Resource Pack";
-
-            PackStatusLabel.Text =
-                "v1.0.0";
-
-            HeaderProjectLabel.Text =
-                packName;
-
-            Log(
-                $"Yeni pack oluşturuldu: {packName}");
-
-            await DisplayAlert(
-                "Başarılı 🎉",
-                "Yeni resource pack oluşturuldu.",
-                "Tamam");
-        }
-        catch (Exception ex)
-        {
-            Log(
-                "Pack oluşturma hatası: " +
-                ex.Message);
-
-            await DisplayAlert(
-                "Hata",
-                ex.Message,
-                "Tamam");
-        }
-    }
-
-    // =========================================================
-    // FILES
-    // =========================================================
-
-    private async void OnFilesClicked(
-        object sender,
-        EventArgs e)
-    {
-        string action =
-            await DisplayActionSheet(
-                "Dosyalar",
-                "İptal",
-                null,
-                "📁 textures",
-                "📄 manifest.json",
-                "🖼️ pack_icon.png");
-
-        switch (action)
-        {
-            case "📄 manifest.json":
-                await OpenCodeEditor();
-                break;
-
-            case "📁 textures":
-                await OpenTextureEditor();
-                break;
-        }
-    }
-
-    // =========================================================
-    // TEXTURE EDITOR
-    // =========================================================
-
-    private async void OnTextureClicked(
-        object sender,
-        EventArgs e)
-    {
-        await OpenTextureEditor();
-    }
-
-    private async Task OpenTextureEditor()
-    {
-        try
-        {
-            await Navigation.PushAsync(
-                new TextureEditorPage());
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert(
-                "Texture Editor Hatası",
-                ex.Message,
-                "Tamam");
-        }
-    }
-
-    // =========================================================
-    // CODE EDITOR
-    // =========================================================
-
-    private async void OnCodeClicked(
-        object sender,
-        EventArgs e)
-    {
-        await OpenCodeEditor();
-    }
-
-    private async Task OpenCodeEditor()
-    {
-        try
-        {
-            await Navigation.PushAsync(
-                new CodeEditorPage());
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert(
-                "Kod Editörü Hatası",
-                ex.Message,
-                "Tamam");
-        }
-    }
-
-    // =========================================================
-    // MOJANG TEXTURE
-    // =========================================================
-
-    private async void OnDownloadTextureClicked(
-        object sender,
-        EventArgs e)
-    {
-        string name =
-            TextureSearchEntry.Text?
-                .Trim() ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            await DisplayAlert(
-                "Texture",
-                "Önce texture adı yaz.",
-                "Tamam");
-
-            return;
+            Content = _mainLayout;
         }
 
-        string category =
-            TextureCategoryPicker.SelectedIndex == 1
-                ? "items"
-                : "blocks";
-
-        if (!name.EndsWith(
-                ".png",
-                StringComparison.OrdinalIgnoreCase))
+        protected override void OnAppearing()
         {
-            name += ".png";
-        }
+            base.OnAppearing();
 
-        string url =
-            "https://raw.githubusercontent.com/" +
-            "Mojang/bedrock-samples/main/" +
-            "resource_pack/textures/" +
-            category +
-            "/" +
-            name;
-
-        try
-        {
-            Log(
-                $"Texture indiriliyor: {name}");
-
-            using HttpClient client =
-                new();
-
-            byte[] data =
-                await client.GetByteArrayAsync(
-                    url);
-
-            string folder =
-                Path.Combine(
-                    FileSystem.AppDataDirectory,
-                    "Projects",
-                    "My Resource Pack",
-                    "textures",
-                    category);
-
-            Directory.CreateDirectory(
-                folder);
-
-            string path =
-                Path.Combine(
-                    folder,
-                    name);
-
-            await File.WriteAllBytesAsync(
-                path,
-                data);
-
-            ProjectContext.CurrentTexturePath =
-                path;
-
-            Log(
-                $"Texture indirildi: {name}");
-
-            await DisplayAlert(
-                "Başarılı 🎨",
-                $"{name} indirildi.",
-                "Tamam");
-        }
-        catch (Exception ex)
-        {
-            Log(
-                "Texture indirme hatası: " +
-                ex.Message);
-
-            await DisplayAlert(
-                "Texture Hatası",
-                "Texture indirilemedi.\n\n" +
-                ex.Message,
-                "Tamam");
-        }
-    }
-
-    // =========================================================
-    // MCPACK
-    // =========================================================
-
-    private async void OnBuildClicked(
-        object sender,
-        EventArgs e)
-    {
-        try
-        {
-            string? project =
-                ProjectContext.CurrentProjectPath;
-
-            if (string.IsNullOrWhiteSpace(project) ||
-                !Directory.Exists(project))
+            // Mavi splash ekrandan sonra UI rendering'i ana thread'e alarak siyah ekrana düşmesini engelliyoruz
+            if (!_uiLoaded)
             {
-                await DisplayAlert(
-                    "Build",
-                    "Önce bir pack oluştur.",
-                    "Tamam");
-
-                return;
-            }
-
-            string manifest =
-                Path.Combine(
-                    project,
-                    "manifest.json");
-
-            if (!File.Exists(manifest))
-            {
-                await DisplayAlert(
-                    "Build",
-                    "manifest.json bulunamadı.",
-                    "Tamam");
-
-                return;
-            }
-
-            string finalPath =
-                Path.Combine(
-                    FileSystem.AppDataDirectory,
-                    "BedrockPack.mcpack");
-
-            if (File.Exists(finalPath))
-                File.Delete(finalPath);
-
-            ZipFile.CreateFromDirectory(
-                project,
-                finalPath,
-                CompressionLevel.Fastest,
-                false);
-
-            _lastGeneratedPackPath =
-                finalPath;
-
-            PackStatusLabel.Text =
-                "✓ .mcpack hazır";
-
-            PackStatusLabel.TextColor =
-                Color.FromArgb(
-                    "#4EC9B0");
-
-            Log(
-                ".mcpack oluşturuldu.");
-
-            await DisplayAlert(
-                "Başarılı 🎉",
-                "BedrockPack.mcpack oluşturuldu.",
-                "Tamam");
-
-            await Share.Default.RequestAsync(
-                new ShareFileRequest
+                Dispatcher.Dispatch(() =>
                 {
-                    Title =
-                        "Minecraft'a Aktar",
-
-                    File =
-                        new ShareFile(
-                            finalPath)
+                    try
+                    {
+                        BuildUI();
+                        _uiLoaded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        AddErrorLabel(ex.Message);
+                    }
                 });
+            }
         }
-        catch (Exception ex)
+
+        private void BuildUI()
         {
-            Log(
-                "Build hatası: " +
-                ex.Message);
+            var verticalStackLayout = new VerticalStackLayout
+            {
+                Spacing = 20,
+                Padding = 20,
+                VerticalOptions = LayoutOptions.Center
+            };
 
-            await DisplayAlert(
-                "Build Hatası",
-                ex.Message,
-                "Tamam");
+            var appLogo = new Image
+            {
+                Source = "appiconfg.png",
+                HeightRequest = 120,
+                WidthRequest = 120,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            verticalStackLayout.Add(appLogo);
+
+            var packStudioTitle = new Label
+            {
+                Text = "PackStudio V1.0",
+                TextColor = Colors.Black,
+                FontAttributes = FontAttributes.Bold,
+                FontSize = 32,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            verticalStackLayout.Add(packStudioTitle);
+
+            var packDescriptionLabel = new Label
+            {
+                Text = "Minecraft Bedrock paketi oluşturucu.",
+                TextColor = Colors.DarkGray,
+                FontSize = 16,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            verticalStackLayout.Add(packDescriptionLabel);
+
+            _projectNameEditor = new Editor
+            {
+                Placeholder = "Proje Adı",
+                PlaceholderColor = Colors.LightGray,
+                TextColor = Colors.Black,
+                HeightRequest = 60,
+                HorizontalOptions = LayoutOptions.Fill
+            };
+            verticalStackLayout.Add(_projectNameEditor);
+
+            _packIconSourceImage = new Image
+            {
+                Source = "packicon_source_logo_demo.png",
+                HeightRequest = 100,
+                WidthRequest = 100,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            verticalStackLayout.Add(_packIconSourceImage);
+
+            var packIconSourceSelectButton = new Button
+            {
+                Text = "Resim Seç",
+                TextColor = Colors.White,
+                BackgroundColor = Color.FromArgb("#512BD4"),
+                CornerRadius = 10,
+                HeightRequest = 50,
+                HorizontalOptions = LayoutOptions.Center
+            };
+            packIconSourceSelectButton.Clicked += OnSelectImageClicked;
+            verticalStackLayout.Add(packIconSourceSelectButton);
+
+            var createNewPackButton = new Button
+            {
+                Text = "Paket Oluştur",
+                TextColor = Colors.White,
+                BackgroundColor = Color.FromArgb("#FF512BD4"),
+                CornerRadius = 10,
+                HeightRequest = 60,
+                HorizontalOptions = LayoutOptions.Fill
+            };
+            createNewPackButton.Clicked += OnCreatePackClicked;
+            verticalStackLayout.Add(createNewPackButton);
+
+            _mainLayout.Clear();
+            _mainLayout.Add(verticalStackLayout);
         }
-    }
 
-    // =========================================================
-    // SETTINGS
-    // =========================================================
-
-    private async Task OpenSettings()
-    {
-        string action =
-            await DisplayActionSheet(
-                "Ayarlar",
-                "Kapat",
-                null,
-                "🌙 Koyu Tema",
-                "ℹ️ Hakkında");
-
-        switch (action)
+        private async void OnSelectImageClicked(object? sender, EventArgs e)
         {
-            case "🌙 Koyu Tema":
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Bir simge resmi seçin",
+                    FileTypes = FilePickerFileType.Images
+                });
 
-                await DisplayAlert(
-                    "Tema",
-                    "Koyu tema zaten aktif.",
-                    "Tamam");
-
-                break;
-
-            case "ℹ️ Hakkında":
-
-                await DisplayAlert(
-                    "Bedrock Pack Studio",
-                    "Minecraft Bedrock Resource Pack Editor\n\n" +
-                    "Mobil Edition",
-                    "Tamam");
-
-                break;
+                if (result != null)
+                {
+                    _selectedImagePath = result.FullPath;
+                    _packIconSourceImage.Source = ImageSource.FromFile(_selectedImagePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hata", $"Resim seçilemedi: {ex.Message}", "Tamam");
+            }
         }
-    }
 
-    // =========================================================
-    // REFRESH
-    // =========================================================
-
-    private async void OnRefreshClicked(
-        object sender,
-        EventArgs e)
-    {
-        Log("Proje görünümü yenilendi.");
-
-        await Task.CompletedTask;
-    }
-
-    // =========================================================
-    // LOG
-    // =========================================================
-
-    private void Log(
-        string message)
-    {
-        string line =
-            $"[{DateTime.Now:HH:mm:ss}] {message}";
-
-        if (string.IsNullOrWhiteSpace(
-                LogLabel.Text) ||
-            LogLabel.Text == "Hazır.")
+        private async void OnCreatePackClicked(object? sender, EventArgs e)
         {
-            LogLabel.Text =
-                line;
+            string packName = _projectNameEditor.Text?.Trim() ?? string.Empty;
 
-            return;
+            if (string.IsNullOrWhiteSpace(packName))
+            {
+                await DisplayAlert("Hata", "Lütfen bir proje adı girin.", "Tamam");
+                return;
+            }
+
+            try
+            {
+                string tempDir = Path.Combine(FileSystem.CacheDirectory, "pack_build_" + Guid.NewGuid().ToString());
+                Directory.CreateDirectory(tempDir);
+
+                var manifest = new
+                {
+                    format_version = 2,
+                    header = new
+                    {
+                        name = packName,
+                        description = "BedrockPackStudio ile oluşturuldu.",
+                        uuid = Guid.NewGuid().ToString(),
+                        version = new[] { 1, 0, 0 },
+                        min_engine_version = new[] { 1, 16, 0 }
+                    },
+                    modules = new[]
+                    {
+                        new
+                        {
+                            type = "resources",
+                            uuid = Guid.NewGuid().ToString(),
+                            version = new[] { 1, 0, 0 }
+                        }
+                    }
+                };
+
+                string manifestJson = JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(Path.Combine(tempDir, "manifest.json"), manifestJson);
+
+                if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
+                {
+                    File.Copy(_selectedImagePath, Path.Combine(tempDir, "pack_icon.png"), true);
+                }
+
+                string zipPath = Path.Combine(FileSystem.CacheDirectory, $"{packName}.mcpack");
+                if (File.Exists(zipPath)) File.Delete(zipPath);
+
+                ZipFile.CreateFromDirectory(tempDir, zipPath);
+                Directory.Delete(tempDir, true);
+
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = "MCPACK Paketini Paylaş",
+                    File = new ShareFile(zipPath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hata", $"Paket oluşturulurken hata çıktı: {ex.Message}", "Tamam");
+            }
         }
 
-        LogLabel.Text +=
-            Environment.NewLine +
-            line;
+        private void AddErrorLabel(string message)
+        {
+            _mainLayout.Clear();
+            _mainLayout.Add(new Label
+            {
+                Text = $"Açılış hatası: {message}",
+                TextColor = Colors.Red,
+                FontSize = 18,
+                VerticalOptions = LayoutOptions.Center,
+                HorizontalOptions = LayoutOptions.Center
+            });
+        }
     }
 }
