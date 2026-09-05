@@ -6,16 +6,73 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
-            <Label Text="Bedrock Pack Studio Mobile" 
-                   FontSize="22" 
-                   FontAttributes="Bold" 
-                   TextColor="White" 
+
+            <!-- Başlık -->
+            <Label Text="Bedrock Pack Studio"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="White"
                    HorizontalOptions="Center" />
 
-            <Button Text="Paket Oluştur ve Minecraft'a Aktar" 
-                    Clicked="OnBuildAndExportClicked" 
-                    BackgroundColor="#2D8CFF" 
-                    TextColor="White" />
+            <Label Text="Minecraft Bedrock Paketi Oluşturucu"
+                   FontSize="14"
+                   TextColor="#AAAAAA"
+                   HorizontalOptions="Center" />
+
+            <!-- Paket Bilgileri Formu -->
+            <Frame BackgroundColor="#2D2D2D" BorderColor="#3D3D3D" CornerRadius="10" Padding="15">
+                <VerticalStackLayout Spacing="10">
+                    
+                    <Label Text="Paket Adı" TextColor="White" FontAttributes="Bold" />
+                    <Entry x:Name="PackNameEntry" 
+                           Placeholder="Örn: My Custom Pack" 
+                           PlaceholderColor="#888888" 
+                           TextColor="White" 
+                           BackgroundColor="#1E1E1E" />
+
+                    <Label Text="Paket Açıklaması" TextColor="White" FontAttributes="Bold" />
+                    <Editor x:Name="PackDescriptionEditor" 
+                            Placeholder="Paket detaylarını girin..." 
+                            PlaceholderColor="#888888" 
+                            TextColor="White" 
+                            BackgroundColor="#1E1E1E" 
+                            HeightRequest="80" />
+
+                    <Label Text="Versiyon" TextColor="White" FontAttributes="Bold" />
+                    <Entry x:Name="PackVersionEntry" 
+                           Text="1.0.0" 
+                           TextColor="White" 
+                           BackgroundColor="#1E1E1E" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Aksiyon Butonları -->
+            <Button x:Name="BuildPackButton"
+                    Text="📦 .mcpack / .zip Oluştur"
+                    BackgroundColor="#0E639C"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="8"
+                    HeightRequest="50"
+                    Clicked="OnBuildPackClicked" />
+
+            <Button x:Name="ExportButton"
+                    Text="📁 Çıktı Klasörünü Aç / Paylaş"
+                    BackgroundColor="#3C3C3C"
+                    TextColor="White"
+                    CornerRadius="8"
+                    HeightRequest="45"
+                    Clicked="OnExportClicked" />
+
+            <!-- Durum Bildirimi -->
+            <Label x:Name="StatusLabel"
+                   Text="Hazır."
+                   TextColor="#4EC9B0"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   Margin="0,10,0,0" />
+
         </VerticalStackLayout>
     </ScrollView>
 
