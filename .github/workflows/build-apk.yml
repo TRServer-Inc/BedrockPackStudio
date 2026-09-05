@@ -18,12 +18,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: .NET SDK Kurulumu
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
 
       - name: Android Workload Kurulumu
-        run: dotnet workload install android maui
+        run: dotnet workload install android
 
       - name: Java JDK 17 Kurulumu
         uses: actions/setup-java@v5
@@ -31,22 +31,42 @@ jobs:
           distribution: 'microsoft'
           java-version: '17'
 
-      - name: Projeyi Restor Et
+      - name: Projeyi Restore Et
         run: dotnet restore
+
+      - name: Projeyi Bul
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse -Filter "*.csproj" | ForEach-Object {
+            Write-Host "CSProj: $($_.FullName)"
+          }
 
       - name: APK Derle ve Yayınla
         shell: pwsh
         run: |
           $csproj = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1
-          if ($csproj) {
-              Write-Host "Bulunan Proje: $($csproj.FullName)"
-              dotnet publish $csproj.FullName -c Release -f net9.0-android --no-restore -o ./publish-output
-          } else {
+
+          if (-not $csproj) {
               Write-Error ".csproj dosyası bulunamadı!"
               exit 1
           }
 
-      - name: APK Dosyasını Çıktı Olarak Üret (Artifact)
+          Write-Host "Bulunan Proje: $($csproj.FullName)"
+
+          dotnet publish $csproj.FullName `
+            -c Release `
+            -f net9.0-android `
+            --no-restore `
+            --verbosity normal `
+            -o ./publish-output
+
+      - name: APK Dosyasını Kontrol Et
+        shell: pwsh
+        run: |
+          Write-Host "Oluşturulan dosyalar:"
+          Get-ChildItem -Recurse ./publish-output
+
+      - name: APK Dosyasını Artifact Olarak Yükle
         uses: actions/upload-artifact@v4
         with:
           name: BedrockPackStudio-Android-APK
