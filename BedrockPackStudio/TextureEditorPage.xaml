@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="BedrockPackStudio.TextureEditorPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#101114"
+    NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- HEADER -->
+        <Grid
+            Grid.Row="0"
+            HeightRequest="60"
+            Padding="10"
+            ColumnDefinitions="Auto,*,Auto"
+            BackgroundColor="#181A1F">
+
+            <Button
+                Grid.Column="0"
+                Text="‹"
+                FontSize="32"
+                TextColor="White"
+                BackgroundColor="Transparent"
+                Clicked="OnBackClicked"/>
+
+            <VerticalStackLayout
+                Grid.Column="1"
+                VerticalOptions="Center">
+
+                <Label
+                    Text="stone.png"
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"/>
+
+                <Label
+                    Text="16 × 16 Texture"
+                    FontSize="11"
+                    TextColor="#858A94"/>
+            </VerticalStackLayout>
+
+            <Button
+                Grid.Column="2"
+                Text="💾"
+                FontSize="22"
+                TextColor="White"
+                BackgroundColor="Transparent"
+                Clicked="OnSaveClicked"/>
+
+        </Grid>
+
+
+        <!-- EDITOR -->
+        <ScrollView
+            Grid.Row="1">
+
+            <VerticalStackLayout
+                Padding="14"
+                Spacing="15">
+
+                <!-- TOOLBAR -->
+                <HorizontalStackLayout
+                    Spacing="8">
+
+                    <Button
+                        Text="↶"
+                        FontSize="22"
+                        WidthRequest="52"
+                        HeightRequest="48"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnUndoClicked"/>
+
+                    <Button
+                        Text="↷"
+                        FontSize="22"
+                        WidthRequest="52"
+                        HeightRequest="48"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnRedoClicked"/>
+
+                    <Button
+                        Text="⊞ Grid"
+                        HeightRequest="48"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnGridClicked"/>
+
+                </HorizontalStackLayout>
+
+
+                <!-- PIXEL CANVAS -->
+                <Border
+                    BackgroundColor="#25282E"
+                    Stroke="#3A3F48"
+                    Padding="10">
+
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="14"/>
+                    </Border.StrokeShape>
+
+                    <Grid
+                        x:Name="CanvasContainer"
+                        HeightRequest="330">
+
+                        <GraphicsView
+                            x:Name="PixelCanvas"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            WidthRequest="300"
+                            HeightRequest="300"/>
+
+                    </Grid>
+
+                </Border>
+
+
+                <!-- TOOLS -->
+                <Label
+                    Text="Araçlar"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    TextColor="White"/>
+
+                <Grid
+                    ColumnDefinitions="*,*,*,*,*"
+                    ColumnSpacing="7">
+
+                    <Button
+                        Grid.Column="0"
+                        Text="✏️"
+                        HeightRequest="55"
+                        BackgroundColor="#176B43"
+                        TextColor="White"
+                        Clicked="OnPenClicked"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="🧹"
+                        HeightRequest="55"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnEraserClicked"/>
+
+                    <Button
+                        Grid.Column="2"
+                        Text="🪣"
+                        HeightRequest="55"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnFillClicked"/>
+
+                    <Button
+                        Grid.Column="3"
+                        Text="💧"
+                        HeightRequest="55"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnPickerClicked"/>
+
+                    <Button
+                        Grid.Column="4"
+                        Text="🎨"
+                        HeightRequest="55"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        Clicked="OnColorClicked"/>
+
+                </Grid>
+
+
+                <!-- COLOR -->
+                <Border
+                    BackgroundColor="#191B20"
+                    Stroke="#2C3038"
+                    Padding="14">
+
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="14"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="10">
+
+                        <Label
+                            Text="Özel Renk"
+                            FontSize="15"
+                            FontAttributes="Bold"
+                            TextColor="White"/>
+
+                        <Grid
+                            ColumnDefinitions="*,Auto"
+                            ColumnSpacing="10">
+
+                            <Entry
+                                x:Name="ColorEntry"
+                                Text="#FFFFFF"
+                                Placeholder="#RRGGBB"
+                                TextColor="White"
+                                BackgroundColor="#25282E"/>
+
+                            <Button
+                                Grid.Column="1"
+                                Text="Uygula"
+                                BackgroundColor="#176B43"
+                                TextColor="White"
+                                Clicked="OnApplyColorClicked"/>
+
+                        </Grid>
+
+                    </VerticalStackLayout>
+
+                </Border>
+
+            </VerticalStackLayout>
+
+        </ScrollView>
+
+
+        <!-- BOTTOM -->
+        <Grid
+            Grid.Row="2"
+            HeightRequest="64"
+            BackgroundColor="#181A1F"
+            ColumnDefinitions="*,*,*">
+
+            <Button
+                Text="16×16"
+                TextColor="#4EC9B0"
+                BackgroundColor="Transparent"/>
+
+            <Button
+                Grid.Column="1"
+                Text="Zoom"
+                TextColor="#858A94"
+                BackgroundColor="Transparent"/>
+
+            <Button
+                Grid.Column="2"
+                Text="PNG"
+                TextColor="#858A94"
+                BackgroundColor="Transparent"/>
+
+        </Grid>
+
+    </Grid>
+
+</ContentPage>
