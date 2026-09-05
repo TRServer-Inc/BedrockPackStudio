@@ -4,239 +4,229 @@
     x:Class="BedrockPackStudio.TextureEditorPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    BackgroundColor="#101114"
+    BackgroundColor="#0D0F12"
     NavigationPage.HasNavigationBar="False">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- HEADER -->
         <Grid
             Grid.Row="0"
-            HeightRequest="60"
-            Padding="10"
-            ColumnDefinitions="Auto,*,Auto"
-            BackgroundColor="#181A1F">
+            HeightRequest="62"
+            Padding="8,0"
+            BackgroundColor="#17191E"
+            ColumnDefinitions="Auto,*,Auto">
 
             <Button
-                Grid.Column="0"
                 Text="‹"
                 FontSize="32"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
-                Clicked="OnBackClicked" />
+                Clicked="OnBackClicked"/>
 
             <VerticalStackLayout
                 Grid.Column="1"
                 VerticalOptions="Center">
 
                 <Label
-                    Text="stone.png"
+                    x:Name="FileNameLabel"
+                    Text="Texture Editor"
                     FontSize="17"
                     FontAttributes="Bold"
-                    TextColor="White" />
+                    TextColor="White"/>
 
                 <Label
-                    Text="16 × 16 Texture"
-                    FontSize="11"
-                    TextColor="#858A94" />
-
+                    Text="Pixel Editor"
+                    FontSize="10"
+                    TextColor="#858A94"/>
             </VerticalStackLayout>
 
             <Button
                 Grid.Column="2"
                 Text="💾"
-                FontSize="22"
+                FontSize="21"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
-                Clicked="OnSaveClicked" />
-
+                Clicked="OnSaveClicked"/>
         </Grid>
 
-        <!-- EDITOR -->
-        <ScrollView Grid.Row="1">
+        <ScrollView
+            Grid.Row="1">
 
             <VerticalStackLayout
                 Padding="14"
-                Spacing="15">
+                Spacing="14">
 
-                <!-- TOOLBAR -->
-                <HorizontalStackLayout Spacing="8">
+                <HorizontalStackLayout
+                    Spacing="8">
 
                     <Button
                         Text="↶"
-                        FontSize="22"
+                        FontSize="21"
                         WidthRequest="52"
                         HeightRequest="48"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnUndoClicked" />
+                        Clicked="OnUndoClicked"/>
 
                     <Button
                         Text="↷"
-                        FontSize="22"
+                        FontSize="21"
                         WidthRequest="52"
                         HeightRequest="48"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnRedoClicked" />
+                        Clicked="OnRedoClicked"/>
 
                     <Button
                         Text="⊞ Grid"
                         HeightRequest="48"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnGridClicked" />
+                        Clicked="OnGridClicked"/>
 
                 </HorizontalStackLayout>
 
-                <!-- PIXEL CANVAS -->
                 <Border
                     BackgroundColor="#25282E"
                     Stroke="#3A3F48"
                     Padding="10">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="14" />
+                        <RoundRectangle CornerRadius="14"/>
                     </Border.StrokeShape>
 
                     <Grid
-                        x:Name="CanvasContainer"
-                        HeightRequest="330">
+                        HeightRequest="320">
 
                         <GraphicsView
                             x:Name="PixelCanvas"
-                            HorizontalOptions="Center"
-                            VerticalOptions="Center"
-                            WidthRequest="300"
-                            HeightRequest="300" />
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill"/>
 
                     </Grid>
-
                 </Border>
 
-                <!-- TOOLS -->
                 <Label
                     Text="Araçlar"
                     FontSize="16"
                     FontAttributes="Bold"
-                    TextColor="White" />
+                    TextColor="White"/>
 
                 <Grid
                     ColumnDefinitions="*,*,*,*,*"
-                    ColumnSpacing="7">
+                    ColumnSpacing="6">
 
                     <Button
                         Grid.Column="0"
                         Text="✏️"
-                        HeightRequest="55"
+                        HeightRequest="54"
                         BackgroundColor="#176B43"
                         TextColor="White"
-                        Clicked="OnPenClicked" />
+                        Clicked="OnPenClicked"/>
 
                     <Button
                         Grid.Column="1"
                         Text="🧹"
-                        HeightRequest="55"
+                        HeightRequest="54"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnEraserClicked" />
+                        Clicked="OnEraserClicked"/>
 
                     <Button
                         Grid.Column="2"
                         Text="🪣"
-                        HeightRequest="55"
+                        HeightRequest="54"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnFillClicked" />
+                        Clicked="OnFillClicked"/>
 
                     <Button
                         Grid.Column="3"
                         Text="💧"
-                        HeightRequest="55"
+                        HeightRequest="54"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnPickerClicked" />
+                        Clicked="OnPickerClicked"/>
 
                     <Button
                         Grid.Column="4"
                         Text="🎨"
-                        HeightRequest="55"
+                        HeightRequest="54"
                         BackgroundColor="#20242B"
                         TextColor="White"
-                        Clicked="OnColorClicked" />
+                        Clicked="OnColorClicked"/>
 
                 </Grid>
 
-                <!-- COLOR -->
                 <Border
-                    BackgroundColor="#191B20"
+                    BackgroundColor="#191C21"
                     Stroke="#2C3038"
                     Padding="14">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="14" />
+                        <RoundRectangle CornerRadius="14"/>
                     </Border.StrokeShape>
 
-                    <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout
+                        Spacing="10">
 
                         <Label
-                            Text="Özel Renk"
+                            Text="Renk"
                             FontSize="15"
                             FontAttributes="Bold"
-                            TextColor="White" />
+                            TextColor="White"/>
 
                         <Grid
                             ColumnDefinitions="*,Auto"
-                            ColumnSpacing="10">
+                            ColumnSpacing="8">
 
                             <Entry
                                 x:Name="ColorEntry"
                                 Text="#FFFFFF"
                                 Placeholder="#RRGGBB"
                                 TextColor="White"
-                                BackgroundColor="#25282E" />
+                                PlaceholderColor="#777D87"
+                                BackgroundColor="#25282E"/>
 
                             <Button
                                 Grid.Column="1"
                                 Text="Uygula"
                                 BackgroundColor="#176B43"
                                 TextColor="White"
-                                Clicked="OnApplyColorClicked" />
+                                Clicked="OnApplyColorClicked"/>
 
                         </Grid>
 
                     </VerticalStackLayout>
-
                 </Border>
 
             </VerticalStackLayout>
-
         </ScrollView>
 
-        <!-- BOTTOM -->
         <Grid
             Grid.Row="2"
-            HeightRequest="64"
-            BackgroundColor="#181A1F"
+            HeightRequest="62"
+            BackgroundColor="#17191E"
             ColumnDefinitions="*,*,*">
 
             <Button
-                Grid.Column="0"
                 Text="16×16"
                 TextColor="#4EC9B0"
-                BackgroundColor="Transparent" />
+                BackgroundColor="Transparent"/>
 
             <Button
                 Grid.Column="1"
-                Text="Zoom"
+                Text="Pixel"
                 TextColor="#858A94"
-                BackgroundColor="Transparent" />
+                BackgroundColor="Transparent"/>
 
             <Button
                 Grid.Column="2"
                 Text="PNG"
                 TextColor="#858A94"
-                BackgroundColor="Transparent" />
+                BackgroundColor="Transparent"/>
 
         </Grid>
 
