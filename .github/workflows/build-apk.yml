@@ -1,0 +1,44 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  release:
+    types: [published]
+  workflow_dispatch: # github üzerinden elle (manual) başlatabilmek için
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repositoriyi Klonla
+        uses: actions/checkout@v4
+
+      - name: .NET SDK Kurulumu
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # projenin kullandığı .net sürümüne göre değiştirebilirsin (örneğin 9.0.x)
+
+      - name: Android Workload Kurulumu
+        run: dotnet workload install android
+
+      - name: Java JDK 17 Kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+
+      - name: Projeyi Restor Et
+        run: dotnet restore
+
+      - name: APK Derle (Release)
+        run: dotnet build -c Release -f net8.0-android --no-restore
+
+      - name: APK Dosyasını Çıktı Olarak Üret (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: BedrockPackStudio-Android-APK
+          path: '**/bin/Release/*/*-Signed.apk' # derlenen apk yolunu otomatik bulur
