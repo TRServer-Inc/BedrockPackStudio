@@ -8,9 +8,18 @@ public static class ProjectContext
 
     public static string? CurrentTexturePath { get; set; }
 
-    public static bool HasProject =>
-        !string.IsNullOrWhiteSpace(CurrentProjectPath) &&
-        Directory.Exists(CurrentProjectPath);
+    public static bool HasProject
+    {
+        get
+        {
+            return
+                !string.IsNullOrWhiteSpace(
+                    CurrentProjectPath)
+                &&
+                Directory.Exists(
+                    CurrentProjectPath);
+        }
+    }
 
     public static void Clear()
     {
