@@ -1,14 +1,19 @@
+using System;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text.Json;
 
 namespace BedrockPackStudio;
 
 public partial class MainPage : ContentPage
 {
-    private static readonly HttpClient Http = new();
+    private string _lastGeneratedPackPath = string.Empty;
 
     private string WorkspaceRoot =>
-        Path.Combine(FileSystem.AppDataDirectory, "Projects");
+        Path.Combine(
+            FileSystem.AppDataDirectory,
+            "Projects");
 
     private string? CurrentProject =>
         ProjectContext.CurrentProjectPath;
@@ -17,27 +22,32 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
-        TextureCategoryPicker.SelectedIndex = 0;
+        BackgroundColor =
+            Color.FromArgb("#101114");
 
-        Directory.CreateDirectory(WorkspaceRoot);
+        Directory.CreateDirectory(
+            WorkspaceRoot);
 
         LoadLastProject();
         RefreshProjectUI();
     }
 
     // =========================================================
-    // STARTUP
+    // PROJECT STARTUP
     // =========================================================
 
     private void LoadLastProject()
     {
-        string? last =
-            Preferences.Default.Get("last_project", string.Empty);
+        string last =
+            Preferences.Default.Get(
+                "last_project",
+                string.Empty);
 
         if (!string.IsNullOrWhiteSpace(last) &&
             Directory.Exists(last))
         {
-            ProjectContext.CurrentProjectPath = last;
+            ProjectContext.CurrentProjectPath =
+                last;
         }
     }
 
@@ -49,26 +59,26 @@ public partial class MainPage : ContentPage
         object sender,
         EventArgs e)
     {
-        string action = await DisplayActionSheet(
-            "Bedrock Pack Studio",
-            "İptal",
-            null,
+        string action =
+            await DisplayActionSheet(
+                "Bedrock Pack Studio",
+                "İptal",
+                null,
 
-            "📂 Proje Aç",
-            "📥 Pack İçe Aktar",
-            "📦 Yeni Pack",
+                "📂 Proje Aç",
+                "📥 Pack İçe Aktar",
+                "📦 Yeni Pack",
 
-            "📁 Dosyalar",
-            "📝 Kod Editörü",
-            "🖼️ Texture Editörü",
+                "📁 Dosyalar",
+                "📝 Kod Editörü",
+                "🖼️ Texture Editörü",
 
-            "📥 Mojang Texture",
-            "📦 .MCPACK Oluştur",
+                "📥 Mojang Texture",
+                "📦 .MCPACK Oluştur",
 
-            "💾 Projeyi Kaydet",
-            "⚙️ Ayarlar",
-            "ℹ️ Hakkında"
-        );
+                "💾 Kaydet",
+                "⚙️ Ayarlar",
+                "ℹ️ Hakkında");
 
         switch (action)
         {
@@ -104,7 +114,7 @@ public partial class MainPage : ContentPage
                 await BuildMcpack();
                 break;
 
-            case "💾 Projeyi Kaydet":
+            case "💾 Kaydet":
                 await SaveProject();
                 break;
 
@@ -122,15 +132,15 @@ public partial class MainPage : ContentPage
         object sender,
         EventArgs e)
     {
-        string action = await DisplayActionSheet(
-            "Diğer",
-            "Kapat",
-            null,
-            "🔄 Projeyi Yenile",
-            "📦 .mcpack Oluştur",
-            "🗑️ Projeyi Kapat",
-            "ℹ️ Hakkında"
-        );
+        string action =
+            await DisplayActionSheet(
+                "Seçenekler",
+                "Kapat",
+                null,
+                "🔄 Projeyi Yenile",
+                "📦 .mcpack Oluştur",
+                "🧹 Projeyi Kapat",
+                "ℹ️ Hakkında");
 
         switch (action)
         {
@@ -142,7 +152,7 @@ public partial class MainPage : ContentPage
                 await BuildMcpack();
                 break;
 
-            case "🗑️ Projeyi Kapat":
+            case "🧹 Projeyi Kapat":
                 CloseProject();
                 break;
 
@@ -150,6 +160,37 @@ public partial class MainPage : ContentPage
                 await ShowAbout();
                 break;
         }
+    }
+
+    // =========================================================
+    // HOME
+    // =========================================================
+
+    private void OnHomeClicked(
+        object sender,
+        EventArgs e)
+    {
+        MainScroll.ScrollToAsync(
+            0,
+            0,
+            false);
+    }
+
+    private async void OnPackClicked(
+        object sender,
+        EventArgs e)
+    {
+        if (!EnsureProject())
+            return;
+
+        await ScrollToFiles();
+    }
+
+    private async void OnSettingsClicked(
+        object sender,
+        EventArgs e)
+    {
+        await OpenSettings();
     }
 
     // =========================================================
@@ -165,16 +206,16 @@ public partial class MainPage : ContentPage
 
     private async Task CreateNewPack()
     {
-        string? name = await DisplayPrompt(
-            "Yeni Pack",
-            "Pack adı:",
-            "Bedrock Pack");
+        string? name =
+            await DisplayPrompt(
+                "Yeni Pack",
+                "Pack adı:",
+                "My Resource Pack");
 
         if (string.IsNullOrWhiteSpace(name))
             return;
 
-        foreach (char c in Path.GetInvalidFileNameChars())
-            name = name.Replace(c, '_');
+        name = SanitizeFileName(name);
 
         string folder =
             Path.Combine(
@@ -185,19 +226,30 @@ public partial class MainPage : ContentPage
         {
             await DisplayAlert(
                 "Pack zaten var",
-                "Bu isimde bir proje zaten bulunuyor.",
+                "Bu isimde bir proje zaten mevcut.",
                 "Tamam");
 
             return;
         }
 
         Directory.CreateDirectory(folder);
+
         Directory.CreateDirectory(
-            Path.Combine(folder, "textures"));
+            Path.Combine(
+                folder,
+                "textures"));
+
         Directory.CreateDirectory(
-            Path.Combine(folder, "textures", "blocks"));
+            Path.Combine(
+                folder,
+                "textures",
+                "blocks"));
+
         Directory.CreateDirectory(
-            Path.Combine(folder, "textures", "items"));
+            Path.Combine(
+                folder,
+                "textures",
+                "items"));
 
         string headerUuid =
             Guid.NewGuid().ToString();
@@ -211,7 +263,7 @@ public partial class MainPage : ContentPage
 
             header = new
             {
-                name,
+                name = name,
                 description =
                     "Bedrock Pack Studio ile oluşturuldu.",
                 uuid = headerUuid,
@@ -240,7 +292,9 @@ public partial class MainPage : ContentPage
                 });
 
         await File.WriteAllTextAsync(
-            Path.Combine(folder, "manifest.json"),
+            Path.Combine(
+                folder,
+                "manifest.json"),
             json);
 
         ProjectContext.CurrentProjectPath =
@@ -250,138 +304,15 @@ public partial class MainPage : ContentPage
             "last_project",
             folder);
 
-        Log($"Yeni pack oluşturuldu: {name}");
+        Log(
+            $"Yeni pack oluşturuldu: {name}");
 
         RefreshProjectUI();
 
         await DisplayAlert(
             "Başarılı 🎉",
-            "Yeni resource pack oluşturuldu.",
+            "Resource pack oluşturuldu.",
             "Tamam");
-    }
-
-    // =========================================================
-    // IMPORT MCPACK
-    // =========================================================
-
-    private async Task ImportPack()
-    {
-        try
-        {
-            FileResult? result =
-                await FilePicker.Default.PickAsync(
-                    new PickOptions
-                    {
-                        PickerTitle =
-                            "Minecraft pack seç",
-                        FileTypes =
-                            new FilePickerFileType(
-                                new Dictionary<DevicePlatform, IEnumerable<string>>
-                                {
-                                    {
-                                        DevicePlatform.Android,
-                                        new[]
-                                        {
-                                            "application/zip",
-                                            "application/octet-stream",
-                                            "*/*"
-                                        }
-                                    }
-                                })
-                    });
-
-            if (result == null)
-                return;
-
-            string destinationName =
-                Path.GetFileNameWithoutExtension(
-                    result.FileName);
-
-            foreach (char c in Path.GetInvalidFileNameChars())
-                destinationName =
-                    destinationName.Replace(c, '_');
-
-            string destination =
-                Path.Combine(
-                    WorkspaceRoot,
-                    destinationName);
-
-            int suffix = 1;
-
-            while (Directory.Exists(destination))
-            {
-                destination =
-                    Path.Combine(
-                        WorkspaceRoot,
-                        $"{destinationName}_{suffix++}");
-            }
-
-            Directory.CreateDirectory(destination);
-
-            using Stream input =
-                await result.OpenReadAsync();
-
-            string tempZip =
-                Path.Combine(
-                    FileSystem.CacheDirectory,
-                    Guid.NewGuid() + ".zip");
-
-            using (FileStream output =
-                   File.Create(tempZip))
-            {
-                await input.CopyToAsync(output);
-            }
-
-            ZipFile.ExtractToDirectory(
-                tempZip,
-                destination);
-
-            File.Delete(tempZip);
-
-            string? manifest =
-                FindFile(
-                    destination,
-                    "manifest.json");
-
-            if (manifest == null)
-            {
-                Directory.Delete(
-                    destination,
-                    true);
-
-                await DisplayAlert(
-                    "Geçersiz Pack",
-                    "manifest.json bulunamadı.",
-                    "Tamam");
-
-                return;
-            }
-
-            ProjectContext.CurrentProjectPath =
-                destination;
-
-            Preferences.Default.Set(
-                "last_project",
-                destination);
-
-            Log($"Pack içe aktarıldı: {result.FileName}");
-
-            RefreshProjectUI();
-
-            await DisplayAlert(
-                "Başarılı 🎉",
-                "Pack projeye aktarıldı.",
-                "Tamam");
-        }
-        catch (Exception ex)
-        {
-            Log("Import hatası: " + ex.Message);
-
-            await DisplayAlert(
-                "Hata",
-                ex.Message,
-                "Tamam");
-        }
     }
 
     // =========================================================
@@ -418,7 +349,7 @@ public partial class MainPage : ContentPage
             {
                 await DisplayAlert(
                     "Android",
-                    "Bu dosyanın gerçek dosya yolu alınamadı. Pack'i .mcpack olarak içe aktarmayı deneyebilirsin.",
+                    "Dosyanın gerçek yolu alınamadı. .mcpack içe aktarmayı kullanabilirsin.",
                     "Tamam");
 
                 return;
@@ -427,13 +358,15 @@ public partial class MainPage : ContentPage
             string? folder =
                 Path.GetDirectoryName(path);
 
-            if (folder == null)
+            if (string.IsNullOrWhiteSpace(folder))
                 return;
 
-            string? manifest =
-                FindFile(folder, "manifest.json");
+            string manifest =
+                Path.Combine(
+                    folder,
+                    "manifest.json");
 
-            if (manifest == null)
+            if (!File.Exists(manifest))
             {
                 await DisplayAlert(
                     "Geçersiz Proje",
@@ -446,6 +379,9 @@ public partial class MainPage : ContentPage
             ProjectContext.CurrentProjectPath =
                 folder;
 
+            ProjectContext.CurrentFilePath =
+                manifest;
+
             Preferences.Default.Set(
                 "last_project",
                 folder);
@@ -456,8 +392,126 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
+            Log(
+                "Proje açma hatası: " +
+                ex.Message);
+
             await DisplayAlert(
                 "Hata",
+                ex.Message,
+                "Tamam");
+        }
+    }
+
+    // =========================================================
+    // IMPORT MCPACK
+    // =========================================================
+
+    private async Task ImportPack()
+    {
+        try
+        {
+            FileResult? result =
+                await FilePicker.Default.PickAsync();
+
+            if (result == null)
+                return;
+
+            string projectName =
+                SanitizeFileName(
+                    Path.GetFileNameWithoutExtension(
+                        result.FileName));
+
+            string destination =
+                Path.Combine(
+                    WorkspaceRoot,
+                    projectName);
+
+            int number = 1;
+
+            while (Directory.Exists(destination))
+            {
+                destination =
+                    Path.Combine(
+                        WorkspaceRoot,
+                        $"{projectName}_{number}");
+
+                number++;
+            }
+
+            Directory.CreateDirectory(
+                destination);
+
+            string temporaryZip =
+                Path.Combine(
+                    FileSystem.CacheDirectory,
+                    Guid.NewGuid() + ".zip");
+
+            await using (
+                Stream input =
+                    await result.OpenReadAsync())
+            await using (
+                FileStream output =
+                    File.Create(
+                        temporaryZip))
+            {
+                await input.CopyToAsync(output);
+            }
+
+            ZipFile.ExtractToDirectory(
+                temporaryZip,
+                destination);
+
+            File.Delete(
+                temporaryZip);
+
+            string? manifest =
+                FindFile(
+                    destination,
+                    "manifest.json");
+
+            if (manifest == null)
+            {
+                Directory.Delete(
+                    destination,
+                    true);
+
+                await DisplayAlert(
+                    "Geçersiz Pack",
+                    "manifest.json bulunamadı.",
+                    "Tamam");
+
+                return;
+            }
+
+            ProjectContext.CurrentProjectPath =
+                destination;
+
+            ProjectContext.CurrentFilePath =
+                manifest;
+
+            Preferences.Default.Set(
+                "last_project",
+                destination);
+
+            Log(
+                $"Pack içe aktarıldı: {result.FileName}");
+
+            RefreshProjectUI();
+
+            await DisplayAlert(
+                "Başarılı 🎉",
+                "Pack projeye aktarıldı.",
+                "Tamam");
+        }
+        catch (Exception ex)
+        {
+            Log(
+                "Import hatası: " +
+                ex.Message);
+
+            await DisplayAlert(
+                "Import Hatası",
                 ex.Message,
                 "Tamam");
         }
@@ -471,9 +525,6 @@ public partial class MainPage : ContentPage
         object sender,
         EventArgs e)
     {
-        if (!EnsureProject())
-            return;
-
         await OpenFilesMenu();
     }
 
@@ -544,7 +595,15 @@ public partial class MainPage : ContentPage
     private async Task ShowFolderFiles(
         string folder)
     {
-        Directory.CreateDirectory(folder);
+        if (!Directory.Exists(folder))
+        {
+            await DisplayAlert(
+                "Klasör",
+                "Klasör bulunamadı.",
+                "Tamam");
+
+            return;
+        }
 
         string[] files =
             Directory.GetFiles(
@@ -556,17 +615,19 @@ public partial class MainPage : ContentPage
         {
             await DisplayAlert(
                 "Klasör boş",
-                "Bu klasörde dosya bulunmuyor.",
+                "Bu klasörde dosya yok.",
                 "Tamam");
 
             return;
         }
 
         string[] names =
-            files.Select(Path.GetFileName)
-                 .Where(x => x != null)
-                 .Cast<string>()
-                 .ToArray();
+            files
+                .Select(Path.GetFileName)
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x))
+                .Cast<string>()
+                .ToArray();
 
         string selected =
             await DisplayActionSheet(
@@ -575,38 +636,33 @@ public partial class MainPage : ContentPage
                 null,
                 names);
 
-        if (selected == "Kapat")
+        if (selected == "Kapat" ||
+            string.IsNullOrWhiteSpace(selected))
             return;
 
-        string selectedPath =
+        string path =
             Path.Combine(
                 folder,
                 selected);
 
-        if (selectedPath.EndsWith(
-                ".png",
-                StringComparison.OrdinalIgnoreCase) ||
-            selectedPath.EndsWith(
-                ".jpg",
-                StringComparison.OrdinalIgnoreCase) ||
-            selectedPath.EndsWith(
-                ".jpeg",
-                StringComparison.OrdinalIgnoreCase))
+        if (IsImage(path))
         {
             ProjectContext.CurrentTexturePath =
-                selectedPath;
+                path;
 
             await OpenTextureEditor();
         }
         else
         {
-            await OpenFileInEditor(
-                selectedPath);
+            await OpenFileInEditor(path);
         }
     }
 
     private async Task CreateNewFile()
     {
+        if (!EnsureProject())
+            return;
+
         string? name =
             await DisplayPrompt(
                 "Yeni Dosya",
@@ -625,17 +681,31 @@ public partial class MainPage : ContentPage
         {
             await DisplayAlert(
                 "Hata",
-                "Bu dosya zaten var.",
+                "Bu dosya zaten mevcut.",
                 "Tamam");
 
             return;
         }
 
+        string extension =
+            Path.GetExtension(name);
+
+        string content =
+            extension.Equals(
+                ".json",
+                StringComparison.OrdinalIgnoreCase)
+                ? "{}"
+                : string.Empty;
+
         await File.WriteAllTextAsync(
             path,
-            "{}");
+            content);
 
-        Log($"Dosya oluşturuldu: {name}");
+        ProjectContext.CurrentFilePath =
+            path;
+
+        Log(
+            $"Dosya oluşturuldu: {name}");
 
         RefreshProjectUI();
 
@@ -644,6 +714,9 @@ public partial class MainPage : ContentPage
 
     private async Task CreateNewFolder()
     {
+        if (!EnsureProject())
+            return;
+
         string? name =
             await DisplayPrompt(
                 "Yeni Klasör",
@@ -660,13 +733,17 @@ public partial class MainPage : ContentPage
 
         Directory.CreateDirectory(path);
 
-        Log($"Klasör oluşturuldu: {name}");
+        Log(
+            $"Klasör oluşturuldu: {name}");
 
         RefreshProjectUI();
     }
 
     private async Task DeleteFile()
     {
+        if (!EnsureProject())
+            return;
+
         string[] files =
             Directory.GetFiles(
                 CurrentProject!,
@@ -674,10 +751,18 @@ public partial class MainPage : ContentPage
                 SearchOption.AllDirectories);
 
         if (files.Length == 0)
+        {
+            await DisplayAlert(
+                "Dosyalar",
+                "Silinecek dosya yok.",
+                "Tamam");
+
             return;
+        }
 
         string[] names =
-            files.Select(x =>
+            files
+                .Select(x =>
                     Path.GetRelativePath(
                         CurrentProject!,
                         x))
@@ -685,12 +770,13 @@ public partial class MainPage : ContentPage
 
         string selected =
             await DisplayActionSheet(
-                "Silinecek dosya",
+                "Dosya Sil",
                 "İptal",
                 null,
                 names);
 
-        if (selected == "İptal")
+        if (selected == "İptal" ||
+            string.IsNullOrWhiteSpace(selected))
             return;
 
         string path =
@@ -700,7 +786,7 @@ public partial class MainPage : ContentPage
 
         bool confirm =
             await DisplayAlert(
-                "Sil",
+                "Dosya Sil",
                 $"{selected} silinsin mi?",
                 "Sil",
                 "İptal");
@@ -710,7 +796,18 @@ public partial class MainPage : ContentPage
 
         File.Delete(path);
 
-        Log($"Dosya silindi: {selected}");
+        if (ProjectContext.CurrentFilePath
+            ?.Equals(
+                path,
+                StringComparison.OrdinalIgnoreCase)
+            == true)
+        {
+            ProjectContext.CurrentFilePath =
+                null;
+        }
+
+        Log(
+            $"Dosya silindi: {selected}");
 
         RefreshProjectUI();
     }
@@ -731,23 +828,30 @@ public partial class MainPage : ContentPage
         if (!EnsureProject())
             return;
 
-        string manifest =
-            Path.Combine(
-                CurrentProject!,
-                "manifest.json");
+        string? file =
+            ProjectContext.CurrentFilePath;
 
-        if (!File.Exists(manifest))
+        if (string.IsNullOrWhiteSpace(file) ||
+            !File.Exists(file))
+        {
+            file =
+                Path.Combine(
+                    CurrentProject!,
+                    "manifest.json");
+        }
+
+        if (!File.Exists(file))
         {
             await DisplayAlert(
-                "Dosya yok",
-                "manifest.json bulunamadı.",
+                "Kod Editörü",
+                "Açılacak dosya bulunamadı.",
                 "Tamam");
 
             return;
         }
 
         ProjectContext.CurrentFilePath =
-            manifest;
+            file;
 
         await Navigation.PushAsync(
             new CodeEditorPage());
@@ -787,7 +891,7 @@ public partial class MainPage : ContentPage
     }
 
     // =========================================================
-    // MOJANG TEXTURE DOWNLOAD
+    // MOJANG TEXTURE
     // =========================================================
 
     private async void OnDownloadTextureClicked(
@@ -817,8 +921,12 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        if (!name.EndsWith(".png"))
+        if (!name.EndsWith(
+                ".png",
+                StringComparison.OrdinalIgnoreCase))
+        {
             name += ".png";
+        }
 
         string category =
             TextureCategoryPicker.SelectedIndex == 1
@@ -830,10 +938,12 @@ public partial class MainPage : ContentPage
 
         try
         {
-            Log($"Texture indiriliyor: {name}");
+            Log(
+                $"Texture indiriliyor: {name}");
 
             byte[] data =
-                await Http.GetByteArrayAsync(url);
+                await new HttpClient()
+                    .GetByteArrayAsync(url);
 
             string folder =
                 Path.Combine(
@@ -855,7 +965,8 @@ public partial class MainPage : ContentPage
             ProjectContext.CurrentTexturePath =
                 path;
 
-            Log($"Texture indirildi: {name}");
+            Log(
+                $"Texture indirildi: {name}");
 
             RefreshProjectUI();
 
@@ -866,11 +977,15 @@ public partial class MainPage : ContentPage
 
             await OpenTextureEditor();
         }
-        catch
+        catch (Exception ex)
         {
+            Log(
+                "Texture hatası: " +
+                ex.Message);
+
             await DisplayAlert(
                 "Texture bulunamadı",
-                "Mojang Bedrock Samples içerisinde bu texture bulunamadı.",
+                "Texture indirilemedi.",
                 "Tamam");
         }
     }
@@ -901,7 +1016,7 @@ public partial class MainPage : ContentPage
             if (!File.Exists(manifest))
             {
                 await DisplayAlert(
-                    "Hata",
+                    "Build",
                     "manifest.json bulunamadı.",
                     "Tamam");
 
@@ -912,39 +1027,54 @@ public partial class MainPage : ContentPage
                 await File.ReadAllTextAsync(
                     manifest);
 
-            JsonDocument document =
+            using JsonDocument document =
                 JsonDocument.Parse(json);
 
-            if (!document.RootElement
-                    .TryGetProperty(
-                        "header",
-                        out _))
+            JsonElement root =
+                document.RootElement;
+
+            if (!root.TryGetProperty(
+                    "header",
+                    out JsonElement header))
             {
                 await DisplayAlert(
-                    "Hata",
-                    "manifest.json geçerli bir Bedrock pack manifesti değil.",
+                    "Build",
+                    "manifest.json içinde header yok.",
                     "Tamam");
 
                 return;
             }
 
-            string name =
-                GetPackName(
-                    document.RootElement);
+            string packName =
+                "BedrockPack";
 
-            string output =
+            if (header.TryGetProperty(
+                    "name",
+                    out JsonElement name))
+            {
+                packName =
+                    name.GetString()
+                    ?? "BedrockPack";
+            }
+
+            string finalPath =
                 Path.Combine(
                     FileSystem.AppDataDirectory,
-                    $"{SanitizeFileName(name)}.mcpack");
+                    SanitizeFileName(
+                        packName) +
+                    ".mcpack");
 
-            if (File.Exists(output))
-                File.Delete(output);
+            if (File.Exists(finalPath))
+                File.Delete(finalPath);
 
             ZipFile.CreateFromDirectory(
                 CurrentProject!,
-                output,
+                finalPath,
                 CompressionLevel.Fastest,
                 false);
+
+            _lastGeneratedPackPath =
+                finalPath;
 
             PackStatusLabel.Text =
                 "✓ .mcpack hazır";
@@ -953,7 +1083,7 @@ public partial class MainPage : ContentPage
                 Color.FromArgb("#4EC9B0");
 
             Log(
-                $".mcpack oluşturuldu: {Path.GetFileName(output)}");
+                $".mcpack oluşturuldu: {Path.GetFileName(finalPath)}");
 
             await Share.Default.RequestAsync(
                 new ShareFileRequest
@@ -961,35 +1091,20 @@ public partial class MainPage : ContentPage
                     Title =
                         "Minecraft'a Aktar",
                     File =
-                        new ShareFile(output)
+                        new ShareFile(finalPath)
                 });
         }
         catch (Exception ex)
         {
-            Log("Build hatası: " + ex.Message);
+            Log(
+                "Build hatası: " +
+                ex.Message);
 
             await DisplayAlert(
                 "Build Hatası",
                 ex.Message,
                 "Tamam");
         }
-    }
-
-    private static string GetPackName(
-        JsonElement root)
-    {
-        if (root.TryGetProperty(
-                "header",
-                out JsonElement header) &&
-            header.TryGetProperty(
-                "name",
-                out JsonElement name))
-        {
-            return name.GetString()
-                   ?? "BedrockPack";
-        }
-
-        return "BedrockPack";
     }
 
     // =========================================================
@@ -1002,8 +1117,8 @@ public partial class MainPage : ContentPage
             return;
 
         await DisplayAlert(
-            "Kaydedildi",
-            "Proje dosyaları zaten çalışma alanına kaydediliyor.",
+            "Proje",
+            "Dosyalar çalışma alanına kaydediliyor.",
             "Tamam");
 
         Log("Proje kaydedildi.");
@@ -1018,6 +1133,7 @@ public partial class MainPage : ContentPage
         EventArgs e)
     {
         RefreshProjectUI();
+
         await Task.CompletedTask;
     }
 
@@ -1034,7 +1150,7 @@ public partial class MainPage : ContentPage
                 "Resource Pack";
 
             PackStatusLabel.Text =
-                "Yeni proje oluştur veya içe aktar";
+                "Yeni pack oluştur veya içe aktar";
 
             HeaderProjectLabel.Text =
                 "Mobil Edition";
@@ -1045,14 +1161,14 @@ public partial class MainPage : ContentPage
         string project =
             ProjectContext.CurrentProjectPath!;
 
-        string name =
+        string projectName =
             Path.GetFileName(project);
 
         ProjectNameLabel.Text =
-            name;
+            projectName;
 
         HeaderProjectLabel.Text =
-            name;
+            projectName;
 
         string manifest =
             Path.Combine(
@@ -1063,19 +1179,18 @@ public partial class MainPage : ContentPage
         {
             try
             {
-                using JsonDocument doc =
+                using JsonDocument document =
                     JsonDocument.Parse(
-                        File.ReadAllText(manifest));
+                        File.ReadAllText(
+                            manifest));
 
                 ProjectTypeLabel.Text =
                     "Resource Pack";
 
-                string version =
-                    GetVersion(
-                        doc.RootElement);
-
                 PackStatusLabel.Text =
-                    $"v{version}";
+                    "v" +
+                    GetVersion(
+                        document.RootElement);
             }
             catch
             {
@@ -1089,10 +1204,6 @@ public partial class MainPage : ContentPage
             "manifest.json",
             manifest);
 
-        AddFolderButton(
-            "📁",
-            "textures");
-
         string textures =
             Path.Combine(
                 project,
@@ -1101,27 +1212,49 @@ public partial class MainPage : ContentPage
         if (Directory.Exists(textures))
         {
             AddFolderButton(
-                "🧱",
-                "textures/blocks");
+                "📁",
+                "textures");
 
-            AddFolderButton(
-                "🎒",
-                "textures/items");
+            string blocks =
+                Path.Combine(
+                    textures,
+                    "blocks");
+
+            string items =
+                Path.Combine(
+                    textures,
+                    "items");
+
+            if (Directory.Exists(blocks))
+            {
+                AddFolderButton(
+                    "🧱",
+                    "textures/blocks");
+            }
+
+            if (Directory.Exists(items))
+            {
+                AddFolderButton(
+                    "🎒",
+                    "textures/items");
+            }
         }
 
-        string[] files =
+        string[] rootFiles =
             Directory.GetFiles(
                 project,
                 "*",
                 SearchOption.TopDirectoryOnly);
 
-        foreach (string file in files)
+        foreach (string file in rootFiles)
         {
             if (Path.GetFileName(file)
                 .Equals(
                     "manifest.json",
                     StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             AddFileButton(
                 GetFileIcon(file),
@@ -1143,43 +1276,52 @@ public partial class MainPage : ContentPage
             {
                 Text =
                     $"{icon}   {name}",
+
                 HorizontalOptions =
                     LayoutOptions.Fill,
-                HorizontalContentAlignment =
-                    TextAlignment.Start,
+
                 HeightRequest = 52,
-                Padding = new Thickness(
-                    15,
-                    0),
+
+                Padding =
+                    new Thickness(
+                        15,
+                        0),
+
                 BackgroundColor =
                     Colors.Transparent,
+
                 TextColor =
                     Colors.White
             };
 
-        button.Clicked += async (_, _) =>
-        {
-            if (IsImage(path))
+        button.Clicked +=
+            async (_, _) =>
             {
-                ProjectContext.CurrentTexturePath =
-                    path;
+                if (IsImage(path))
+                {
+                    ProjectContext.CurrentTexturePath =
+                        path;
 
-                await OpenTextureEditor();
-            }
-            else
-            {
-                await OpenFileInEditor(path);
-            }
-        };
+                    await OpenTextureEditor();
+                }
+                else
+                {
+                    await OpenFileInEditor(
+                        path);
+                }
+            };
 
-        ProjectFilesLayout.Children.Add(button);
+        ProjectFilesLayout.Children.Add(
+            button);
 
         ProjectFilesLayout.Children.Add(
             new BoxView
             {
                 HeightRequest = 1,
+
                 BackgroundColor =
-                    Color.FromArgb("#292D34")
+                    Color.FromArgb(
+                        "#292D34")
             });
     }
 
@@ -1192,76 +1334,53 @@ public partial class MainPage : ContentPage
             {
                 Text =
                     $"{icon}   {name}",
+
                 HorizontalOptions =
                     LayoutOptions.Fill,
-                HorizontalContentAlignment =
-                    TextAlignment.Start,
+
                 HeightRequest = 52,
-                Padding = new Thickness(
-                    15,
-                    0),
+
+                Padding =
+                    new Thickness(
+                        15,
+                        0),
+
                 BackgroundColor =
                     Colors.Transparent,
+
                 TextColor =
                     Colors.White
             };
 
-        button.Clicked += async (_, _) =>
-        {
-            string path =
-                Path.Combine(
-                    CurrentProject!,
+        button.Clicked +=
+            async (_, _) =>
+            {
+                string relative =
                     name.Replace(
                         '/',
-                        Path.DirectorySeparatorChar));
+                        Path.DirectorySeparatorChar);
 
-            if (Directory.Exists(path))
-                await ShowFolderFiles(path);
-        };
+                string path =
+                    Path.Combine(
+                        CurrentProject!,
+                        relative);
 
-        ProjectFilesLayout.Children.Add(button);
+                await ShowFolderFiles(
+                    path);
+            };
+
+        ProjectFilesLayout.Children.Add(
+            button);
 
         ProjectFilesLayout.Children.Add(
             new BoxView
             {
                 HeightRequest = 1,
+
                 BackgroundColor =
-                    Color.FromArgb("#292D34")
+                    Color.FromArgb(
+                        "#292D34")
             });
-    }
-
-    // =========================================================
-    // BOTTOM NAV
-    // =========================================================
-
-    private void OnHomeClicked(
-        object sender,
-        EventArgs e)
-    {
-        MainScroll.ScrollToAsync(
-            0,
-            0,
-            false);
-    }
-
-    private async void OnPackClicked(
-        object sender,
-        EventArgs e)
-    {
-        if (!EnsureProject())
-            return;
-
-        await MainScroll.ScrollToAsync(
-            ProjectFilesLayout,
-            ScrollToPosition.Start,
-            true);
-    }
-
-    private async void OnSettingsClicked(
-        object sender,
-        EventArgs e)
-    {
-        await OpenSettings();
     }
 
     // =========================================================
@@ -1277,7 +1396,7 @@ public partial class MainPage : ContentPage
                 null,
                 "🌙 Koyu Tema",
                 "🧹 Projeyi Kapat",
-                "🗑️ Tüm Çalışma Alanını Temizle");
+                "🗑️ Çalışma Alanını Temizle");
 
         switch (action)
         {
@@ -1285,36 +1404,38 @@ public partial class MainPage : ContentPage
                 CloseProject();
                 break;
 
-            case "🗑️ Tüm Çalışma Alanını Temizle":
+            case "🗑️ Çalışma Alanını Temizle":
+
                 bool confirm =
                     await DisplayAlert(
                         "Dikkat",
-                        "Çalışma alanındaki tüm projeler silinecek.",
+                        "Tüm çalışma alanı silinecek.",
                         "Sil",
                         "İptal");
 
-                if (confirm)
-                {
-                    if (Directory.Exists(
+                if (!confirm)
+                    break;
+
+                if (Directory.Exists(
                         WorkspaceRoot))
-                    {
-                        Directory.Delete(
-                            WorkspaceRoot,
-                            true);
-                    }
-
-                    Directory.CreateDirectory(
-                        WorkspaceRoot);
-
-                    ProjectContext.Clear();
-
-                    Preferences.Default.Remove(
-                        "last_project");
-
-                    RefreshProjectUI();
-
-                    Log("Çalışma alanı temizlendi.");
+                {
+                    Directory.Delete(
+                        WorkspaceRoot,
+                        true);
                 }
+
+                Directory.CreateDirectory(
+                    WorkspaceRoot);
+
+                ProjectContext.Clear();
+
+                Preferences.Default.Remove(
+                    "last_project");
+
+                RefreshProjectUI();
+
+                Log(
+                    "Çalışma alanı temizlendi.");
 
                 break;
         }
@@ -1330,7 +1451,7 @@ public partial class MainPage : ContentPage
             "Bedrock Pack Studio",
             "Mobil Edition\n\n" +
             "Minecraft Bedrock Resource Pack Editor\n\n" +
-            "Proje yönetimi • Kod editörü • Texture editörü • .mcpack",
+            "Proje • Kod • Texture • MCPACK",
             "Tamam");
     }
 
@@ -1344,8 +1465,8 @@ public partial class MainPage : ContentPage
             return true;
 
         _ = DisplayAlert(
-            "Proje yok",
-            "Önce yeni bir pack oluştur veya mevcut bir pack'i içe aktar.",
+            "Proje Yok",
+            "Önce bir resource pack oluştur veya içe aktar.",
             "Tamam");
 
         return false;
@@ -1360,7 +1481,8 @@ public partial class MainPage : ContentPage
 
         RefreshProjectUI();
 
-        Log("Proje kapatıldı.");
+        Log(
+            "Proje kapatıldı.");
     }
 
     private async Task ScrollToTextureSection()
@@ -1371,15 +1493,25 @@ public partial class MainPage : ContentPage
             true);
     }
 
+    private async Task ScrollToFiles()
+    {
+        await MainScroll.ScrollToAsync(
+            ProjectFilesLayout,
+            ScrollToPosition.Center,
+            true);
+    }
+
     private void Log(string message)
     {
         string line =
             $"[{DateTime.Now:HH:mm:ss}] {message}";
 
         if (string.IsNullOrWhiteSpace(
-            LogLabel.Text))
+            LogLabel.Text) ||
+            LogLabel.Text == "Hazır.")
         {
-            LogLabel.Text = line;
+            LogLabel.Text =
+                line;
         }
         else
         {
@@ -1404,11 +1536,11 @@ public partial class MainPage : ContentPage
     private static bool IsImage(
         string path)
     {
-        string ext =
+        string extension =
             Path.GetExtension(path)
                 .ToLowerInvariant();
 
-        return ext is
+        return extension is
             ".png" or
             ".jpg" or
             ".jpeg";
@@ -1420,11 +1552,11 @@ public partial class MainPage : ContentPage
         if (IsImage(path))
             return "🖼️";
 
-        string ext =
+        string extension =
             Path.GetExtension(path)
                 .ToLowerInvariant();
 
-        return ext switch
+        return extension switch
         {
             ".json" => "📄",
             ".txt" => "📝",
@@ -1445,8 +1577,10 @@ public partial class MainPage : ContentPage
 
             return string.Join(
                 ".",
-                version.EnumerateArray()
-                       .Select(x => x.GetInt32()));
+                version
+                    .EnumerateArray()
+                    .Select(x =>
+                        x.GetInt32()));
         }
         catch
         {
