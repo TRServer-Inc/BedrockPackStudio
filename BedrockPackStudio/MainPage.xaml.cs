@@ -10,10 +10,12 @@ namespace BedrockPackStudio
 {
     public partial class MainPage : ContentPage
     {
-        private Entry _packNameEntry;
-        private Editor _packDescEditor;
-        private Entry _packVersionEntry;
-        private Label _statusLabel;
+#nullable enable
+        private Entry? _packNameEntry;
+        private Editor? _packDescEditor;
+        private Entry? _packVersionEntry;
+        private Label? _statusLabel;
+#nullable disable
         private string _lastGeneratedPackPath = string.Empty;
 
         public MainPage()
@@ -103,11 +105,11 @@ namespace BedrockPackStudio
             };
         }
 
-        private async void OnBuildPackClicked(object sender, EventArgs e)
+        private async void OnBuildPackClicked(object? sender, EventArgs e)
         {
-            string packName = _packNameEntry.Text?.Trim() ?? "";
-            string packDesc = _packDescEditor.Text?.Trim() ?? "";
-            string packVersion = _packVersionEntry.Text?.Trim() ?? "1.0.0";
+            string packName = _packNameEntry?.Text?.Trim() ?? "";
+            string packDesc = _packDescEditor?.Text?.Trim() ?? "";
+            string packVersion = _packVersionEntry?.Text?.Trim() ?? "1.0.0";
 
             if (string.IsNullOrEmpty(packName))
             {
@@ -117,8 +119,11 @@ namespace BedrockPackStudio
 
             try
             {
-                _statusLabel.Text = "Oluşturuluyor...";
-                _statusLabel.TextColor = Colors.Yellow;
+                if (_statusLabel != null)
+                {
+                    _statusLabel.Text = "Oluşturuluyor...";
+                    _statusLabel.TextColor = Colors.Yellow;
+                }
 
                 string tempDir = Path.Combine(FileSystem.CacheDirectory, "Pack_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
@@ -154,20 +159,27 @@ namespace BedrockPackStudio
                 Directory.Delete(tempDir, true);
 
                 _lastGeneratedPackPath = finalPath;
-                _statusLabel.Text = "Başarıyla oluşturuldu!";
-                _statusLabel.TextColor = Colors.LightGreen;
+                
+                if (_statusLabel != null)
+                {
+                    _statusLabel.Text = "Başarıyla oluşturuldu!";
+                    _statusLabel.TextColor = Colors.LightGreen;
+                }
 
                 await DisplayAlert("Başarılı", "Paket hazır!", "Tamam");
             }
             catch (Exception ex)
             {
-                _statusLabel.Text = "Hata oluştu!";
-                _statusLabel.TextColor = Colors.Red;
+                if (_statusLabel != null)
+                {
+                    _statusLabel.Text = "Hata oluştu!";
+                    _statusLabel.TextColor = Colors.Red;
+                }
                 await DisplayAlert("Hata", ex.Message, "Tamam");
             }
         }
 
-        private async void OnExportClicked(object sender, EventArgs e)
+        private async void OnExportClicked(object? sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(_lastGeneratedPackPath) || !File.Exists(_lastGeneratedPackPath))
             {
