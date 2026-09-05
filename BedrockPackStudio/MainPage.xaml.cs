@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace BedrockPackStudio
 {
-    public class MainPage : ContentPage
+    public partial class MainPage : ContentPage
     {
         private Grid _mainLayout;
         private bool _uiLoaded = false;
@@ -17,7 +17,8 @@ namespace BedrockPackStudio
 
         public MainPage()
         {
-            // Arka planı siyah kalmasın diye açıkça beyaz yapıyoruz
+            InitializeComponent();
+
             BackgroundColor = Colors.White;
 
             _mainLayout = new Grid
@@ -34,7 +35,6 @@ namespace BedrockPackStudio
         {
             base.OnAppearing();
 
-            // Mavi splash ekrandan sonra UI rendering'i ana thread'e alarak siyah ekrana düşmesini engelliyoruz
             if (!_uiLoaded)
             {
                 Dispatcher.Dispatch(() =>
