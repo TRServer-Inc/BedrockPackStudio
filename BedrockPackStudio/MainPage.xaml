@@ -4,56 +4,58 @@
     x:Class="BedrockPackStudio.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    BackgroundColor="#101114"
+    BackgroundColor="#0D0F12"
     NavigationPage.HasNavigationBar="False">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- TOP BAR -->
+        <!-- HEADER -->
         <Grid
             Grid.Row="0"
-            HeightRequest="62"
-            Padding="14,0"
-            BackgroundColor="#181A1F"
+            HeightRequest="64"
+            Padding="12,0"
+            BackgroundColor="#17191E"
             ColumnDefinitions="Auto,*,Auto">
 
             <Button
                 Grid.Column="0"
                 Text="☰"
-                FontSize="25"
+                FontSize="27"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
-                Clicked="OnMenuClicked" />
+                Clicked="OnMenuClicked"/>
 
             <VerticalStackLayout
                 Grid.Column="1"
                 VerticalOptions="Center"
-                Spacing="0">
+                Spacing="1">
 
                 <Label
                     Text="Bedrock Pack Studio"
                     FontSize="18"
                     FontAttributes="Bold"
-                    TextColor="White" />
+                    TextColor="White"/>
 
                 <Label
-                    Text="Minecraft Bedrock Editor"
+                    x:Name="HeaderProjectLabel"
+                    Text="Mobil Edition"
                     FontSize="11"
-                    TextColor="#858A94" />
-
+                    TextColor="#858A94"/>
             </VerticalStackLayout>
 
             <Button
                 Grid.Column="2"
                 Text="⋮"
-                FontSize="25"
+                FontSize="27"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
-                Clicked="OnMoreClicked" />
-
+                Clicked="OnMoreClicked"/>
         </Grid>
 
-        <!-- MAIN CONTENT -->
+
+        <!-- CONTENT -->
         <ScrollView
             Grid.Row="1"
             x:Name="MainScroll">
@@ -62,107 +64,135 @@
                 Padding="16"
                 Spacing="14">
 
-                <!-- PACK CARD -->
+                <!-- PROJECT CARD -->
                 <Border
-                    Stroke="#2C3038"
+                    BackgroundColor="#191C21"
+                    Stroke="#30343D"
                     StrokeThickness="1"
-                    BackgroundColor="#191B20"
-                    Padding="18">
+                    Padding="16">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="16" />
+                        <RoundRectangle CornerRadius="18"/>
                     </Border.StrokeShape>
 
-                    <Grid ColumnDefinitions="70,*">
+                    <Grid ColumnDefinitions="64,*">
 
                         <Border
-                            Grid.Column="0"
-                            WidthRequest="58"
-                            HeightRequest="58"
+                            WidthRequest="56"
+                            HeightRequest="56"
                             BackgroundColor="#252A32">
 
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="14" />
+                                <RoundRectangle CornerRadius="14"/>
                             </Border.StrokeShape>
 
                             <Label
                                 Text="📦"
-                                FontSize="30"
+                                FontSize="29"
                                 HorizontalOptions="Center"
-                                VerticalOptions="Center" />
-
+                                VerticalOptions="Center"/>
                         </Border>
 
                         <VerticalStackLayout
                             Grid.Column="1"
                             Margin="14,0,0,0"
-                            VerticalOptions="Center">
+                            VerticalOptions="Center"
+                            Spacing="2">
 
                             <Label
-                                Text="Test Pack"
-                                FontSize="20"
+                                x:Name="ProjectNameLabel"
+                                Text="Proje Yok"
+                                FontSize="19"
                                 FontAttributes="Bold"
-                                TextColor="White" />
+                                TextColor="White"/>
 
                             <Label
+                                x:Name="ProjectTypeLabel"
                                 Text="Resource Pack"
                                 FontSize="13"
-                                TextColor="#858A94" />
+                                TextColor="#858A94"/>
 
                             <Label
                                 x:Name="PackStatusLabel"
-                                Text="Yeni proje"
+                                Text="Yeni proje oluştur veya içe aktar"
                                 FontSize="12"
-                                TextColor="#4EC9B0" />
-
+                                TextColor="#4EC9B0"/>
                         </VerticalStackLayout>
-
                     </Grid>
-
                 </Border>
 
-                <!-- ACTIONS -->
+
+                <!-- QUICK ACTIONS -->
+                <Label
+                    Text="Hızlı İşlemler"
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    Margin="0,4,0,0"/>
+
                 <Grid
                     ColumnDefinitions="*,*"
-                    RowDefinitions="Auto,Auto"
+                    RowDefinitions="Auto,Auto,Auto"
                     ColumnSpacing="10"
                     RowSpacing="10">
 
                     <Button
                         Grid.Row="0"
                         Grid.Column="0"
-                        Text="📂  Dosyalar"
+                        Text="📂  Proje Aç"
                         HeightRequest="62"
                         BackgroundColor="#20242B"
                         TextColor="White"
                         FontAttributes="Bold"
                         CornerRadius="14"
-                        Clicked="OnFilesClicked" />
+                        Clicked="OnOpenProjectClicked"/>
 
                     <Button
                         Grid.Row="0"
                         Grid.Column="1"
+                        Text="📦  Yeni Pack"
+                        HeightRequest="62"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="14"
+                        Clicked="OnNewPackClicked"/>
+
+                    <Button
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="📁  Dosyalar"
+                        HeightRequest="62"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="14"
+                        Clicked="OnFilesClicked"/>
+
+                    <Button
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Text="📝  Kod Editörü"
+                        HeightRequest="62"
+                        BackgroundColor="#20242B"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="14"
+                        Clicked="OnCodeClicked"/>
+
+                    <Button
+                        Grid.Row="2"
+                        Grid.Column="0"
                         Text="🖼️  Texture"
                         HeightRequest="62"
                         BackgroundColor="#20242B"
                         TextColor="White"
                         FontAttributes="Bold"
                         CornerRadius="14"
-                        Clicked="OnTextureClicked" />
+                        Clicked="OnTextureClicked"/>
 
                     <Button
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Text="&lt;/&gt;  Kod Editörü"
-                        HeightRequest="62"
-                        BackgroundColor="#20242B"
-                        TextColor="White"
-                        FontAttributes="Bold"
-                        CornerRadius="14"
-                        Clicked="OnCodeClicked" />
-
-                    <Button
-                        Grid.Row="1"
+                        Grid.Row="2"
                         Grid.Column="1"
                         Text="📦  .MCPACK"
                         HeightRequest="62"
@@ -170,137 +200,179 @@
                         TextColor="White"
                         FontAttributes="Bold"
                         CornerRadius="14"
-                        Clicked="OnBuildClicked" />
-
+                        Clicked="OnBuildClicked"/>
                 </Grid>
 
+
                 <!-- PROJECT FILES -->
-                <Label
-                    Text="Proje Dosyaları"
-                    FontSize="17"
-                    FontAttributes="Bold"
-                    TextColor="White"
-                    Margin="0,10,0,0" />
+                <Grid
+                    ColumnDefinitions="*,Auto"
+                    Margin="0,10,0,0">
+
+                    <Label
+                        Text="Proje Dosyaları"
+                        FontSize="17"
+                        FontAttributes="Bold"
+                        TextColor="White"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="Yenile"
+                        FontSize="12"
+                        Padding="12,4"
+                        HeightRequest="34"
+                        BackgroundColor="#20242B"
+                        TextColor="#AEB4BF"
+                        Clicked="OnRefreshClicked"/>
+                </Grid>
 
                 <Border
-                    BackgroundColor="#191B20"
+                    BackgroundColor="#191C21"
                     Stroke="#2C3038"
                     Padding="0">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="14" />
+                        <RoundRectangle CornerRadius="14"/>
                     </Border.StrokeShape>
 
-                    <VerticalStackLayout>
-
-                        <Grid
-                            Padding="15"
-                            ColumnDefinitions="32,*,Auto">
-
-                            <Label
-                                Grid.Column="0"
-                                Text="📁"
-                                FontSize="20" />
-
-                            <Label
-                                Grid.Column="1"
-                                Text="textures"
-                                TextColor="White"
-                                FontSize="15"
-                                VerticalOptions="Center" />
-
-                            <Label
-                                Grid.Column="2"
-                                Text="›"
-                                TextColor="#777D87"
-                                FontSize="25" />
-
-                        </Grid>
-
-                        <BoxView
-                            HeightRequest="1"
-                            BackgroundColor="#292D34" />
-
-                        <Grid
-                            Padding="15"
-                            ColumnDefinitions="32,*,Auto">
-
-                            <Label
-                                Grid.Column="0"
-                                Text="📄"
-                                FontSize="19" />
-
-                            <Label
-                                Grid.Column="1"
-                                Text="manifest.json"
-                                TextColor="White"
-                                FontSize="15"
-                                VerticalOptions="Center" />
-
-                            <Label
-                                Grid.Column="2"
-                                Text="›"
-                                TextColor="#777D87"
-                                FontSize="25" />
-
-                        </Grid>
-
-                    </VerticalStackLayout>
-
+                    <VerticalStackLayout
+                        x:Name="ProjectFilesLayout"
+                        Spacing="0"/>
                 </Border>
 
-                <!-- INFO -->
+
+                <!-- MOJANG TEXTURE -->
+                <Label
+                    Text="Mojang Texture"
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    Margin="0,8,0,0"/>
+
                 <Border
-                    BackgroundColor="#15171B"
-                    Stroke="#252930"
-                    Padding="15">
+                    BackgroundColor="#191C21"
+                    Stroke="#2C3038"
+                    Padding="14">
 
                     <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="12" />
+                        <RoundRectangle CornerRadius="14"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="10">
+
+                        <Label
+                            Text="Minecraft Bedrock Samples"
+                            FontSize="14"
+                            FontAttributes="Bold"
+                            TextColor="White"/>
+
+                        <Entry
+                            x:Name="TextureSearchEntry"
+                            Placeholder="stone, dirt, diamond..."
+                            TextColor="White"
+                            PlaceholderColor="#686E78"
+                            BackgroundColor="#25282E"/>
+
+                        <Picker
+                            x:Name="TextureCategoryPicker"
+                            Title="Kategori"
+                            TitleColor="#858A94"
+                            TextColor="White"
+                            BackgroundColor="#25282E">
+
+                            <Picker.Items>
+                                <x:String>blocks</x:String>
+                                <x:String>items</x:String>
+                            </Picker.Items>
+                        </Picker>
+
+                        <Button
+                            Text="📥  Dokuyu İndir"
+                            HeightRequest="48"
+                            BackgroundColor="#176B43"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            CornerRadius="12"
+                            Clicked="OnDownloadTextureClicked"/>
+                    </VerticalStackLayout>
+                </Border>
+
+
+                <!-- LOG -->
+                <Label
+                    Text="İşlem Günlüğü"
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    Margin="0,8,0,0"/>
+
+                <Border
+                    BackgroundColor="#101216"
+                    Stroke="#292D34"
+                    Padding="12">
+
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
                     </Border.StrokeShape>
 
                     <Label
-                        Text="💡 Bir texture seçerek piksel düzenleyiciyi açabilirsin. JSON dosyaları kod editöründe açılır."
-                        TextColor="#9298A3"
-                        FontSize="13" />
+                        x:Name="LogLabel"
+                        Text="Hazır."
+                        FontFamily="monospace"
+                        FontSize="11"
+                        TextColor="#8F96A3"/>
+                </Border>
 
+
+                <Border
+                    BackgroundColor="#15181D"
+                    Stroke="#252930"
+                    Padding="14">
+
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+
+                    <Label
+                        Text="💡 Mobil sürümde projeler uygulamanın çalışma alanında tutulur. .mcpack dosyalarını Minecraft'a paylaşabilirsin."
+                        TextColor="#9298A3"
+                        FontSize="12"/>
                 </Border>
 
             </VerticalStackLayout>
-
         </ScrollView>
 
-        <!-- BOTTOM NAVIGATION -->
+
+        <!-- BOTTOM NAV -->
         <Grid
             Grid.Row="2"
             HeightRequest="68"
-            BackgroundColor="#181A1F"
+            BackgroundColor="#17191E"
             ColumnDefinitions="*,*,*">
 
             <Button
                 Grid.Column="0"
-                Text="🏠&#x0a;Ana Sayfa"
+                Text="🏠&#x0A;Ana Sayfa"
                 FontSize="11"
                 TextColor="#4EC9B0"
                 BackgroundColor="Transparent"
-                Clicked="OnHomeClicked" />
+                Clicked="OnHomeClicked"/>
 
             <Button
                 Grid.Column="1"
-                Text="📦&#x0a;Pack"
+                Text="📦&#x0A;Pack"
                 FontSize="11"
                 TextColor="#858A94"
                 BackgroundColor="Transparent"
-                Clicked="OnPackClicked" />
+                Clicked="OnPackClicked"/>
 
             <Button
                 Grid.Column="2"
-                Text="⚙️&#x0a;Ayarlar"
+                Text="⚙️&#x0A;Ayarlar"
                 FontSize="11"
                 TextColor="#858A94"
                 BackgroundColor="Transparent"
-                Clicked="OnSettingsClicked" />
-
+                Clicked="OnSettingsClicked"/>
         </Grid>
 
     </Grid>
