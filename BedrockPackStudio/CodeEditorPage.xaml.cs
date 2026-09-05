@@ -1,53 +1,74 @@
-using System;
 using System.Text.Json;
 
 namespace BedrockPackStudio;
 
 public partial class CodeEditorPage : ContentPage
 {
-    private string _previousText = "";
+    private readonly Stack<string> _undo = new();
+    private readonly Stack<string> _redo = new();
 
-    private string _nextText = "";
-
-    private bool _changingText;
+    private bool _internalChange;
 
     public CodeEditorPage()
     {
         InitializeComponent();
 
-        CodeEditor.Text =
-@"{
-  ""format_version"": 2,
-  ""header"": {
-    ""name"": ""Test Pack"",
-    ""description"": ""Bedrock Pack Studio"",
-    ""uuid"": ""00000000-0000-0000-0000-000000000000"",
-    ""version"": [1, 0, 0],
-    ""min_engine_version"": [1, 20, 0]
-  },
-  ""modules"": [
-    {
-      ""type"": ""resources"",
-      ""uuid"": ""00000000-0000-0000-0000-000000000001"",
-      ""version"": [1, 0, 0]
+        LoadFile();
     }
-  ]
-}";
 
-        _previousText =
-            CodeEditor.Text;
+    private async void LoadFile()
+    {
+        string? path =
+            ProjectContext.CurrentFilePath;
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            CodeEditor.Text = "{}";
+            UpdateLineNumbers();
+            return;
+        }
+
+        FileNameLabel.Text =
+            Path.GetFileName(path);
+
+        try
+        {
+            if (File.Exists(path))
+            {
+                CodeEditor.Text =
+                    await File.ReadAllTextAsync(path);
+            }
+            else
+            {
+                CodeEditor.Text = "{}";
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert(
+                "Hata",
+                ex.Message,
+                "Tamam");
+        }
+
+        UpdateLineNumbers();
     }
 
     private void OnTextChanged(
         object sender,
         TextChangedEventArgs e)
     {
-        if (_changingText)
+        if (_internalChange)
             return;
 
-        if (e.OldTextValue != null)
-            _previousText =
-                e.OldTextValue;
+        if (e.OldTextValue != null &&
+            e.OldTextValue != e.NewTextValue)
+        {
+            _undo.Push(
+                e.OldTextValue);
+
+            _redo.Clear();
+        }
 
         UpdateLineNumbers();
     }
@@ -59,68 +80,67 @@ public partial class CodeEditorPage : ContentPage
                 1,
                 (CodeEditor.Text ?? "")
                     .Split('\n')
-                    .Length
-            );
+                    .Length);
 
-        var text = "";
-
-        for (int i = 1; i <= count; i++)
-        {
-            text += i;
-
-            if (i < count)
-                text += "\n";
-        }
-
-        LineNumbers.Text = text;
+        LineNumbers.Text =
+            string.Join(
+                "\n",
+                Enumerable.Range(
+                    1,
+                    count));
     }
-
-    // =====================================================
-    // UNDO
-    // =====================================================
 
     private void OnUndoClicked(
         object sender,
         EventArgs e)
     {
-        if (string.IsNullOrEmpty(_previousText))
+        if (_undo.Count == 0)
             return;
 
-        _nextText =
-            CodeEditor.Text;
+        string current =
+            CodeEditor.Text ?? "";
 
-        _changingText = true;
+        string previous =
+            _undo.Pop();
 
-        CodeEditor.Text =
-            _previousText;
+        _redo.Push(current);
 
-        _changingText = false;
-
-        UpdateLineNumbers();
+        SetTextWithoutHistory(
+            previous);
     }
 
     private void OnRedoClicked(
         object sender,
         EventArgs e)
     {
-        if (string.IsNullOrEmpty(_nextText))
+        if (_redo.Count == 0)
             return;
 
-        _changingText = true;
+        string current =
+            CodeEditor.Text ?? "";
 
-        CodeEditor.Text =
-            _nextText;
+        string next =
+            _redo.Pop();
 
-        _changingText = false;
+        _undo.Push(current);
+
+        SetTextWithoutHistory(
+            next);
+    }
+
+    private void SetTextWithoutHistory(
+        string text)
+    {
+        _internalChange = true;
+
+        CodeEditor.Text = text;
+
+        _internalChange = false;
 
         UpdateLineNumbers();
     }
 
-    // =====================================================
-    // FORMAT
-    // =====================================================
-
-    private void OnFormatClicked(
+    private async void OnFormatClicked(
         object sender,
         EventArgs e)
     {
@@ -128,8 +148,7 @@ public partial class CodeEditorPage : ContentPage
         {
             using JsonDocument document =
                 JsonDocument.Parse(
-                    CodeEditor.Text
-                );
+                    CodeEditor.Text);
 
             string formatted =
                 JsonSerializer.Serialize(
@@ -137,28 +156,24 @@ public partial class CodeEditorPage : ContentPage
                     new JsonSerializerOptions
                     {
                         WriteIndented = true
-                    }
-                );
+                    });
 
-            _previousText =
-                CodeEditor.Text;
+            _undo.Push(
+                CodeEditor.Text);
 
-            CodeEditor.Text =
-                formatted;
+            _redo.Clear();
+
+            SetTextWithoutHistory(
+                formatted);
         }
-        catch
+        catch (Exception ex)
         {
-            DisplayAlert(
+            await DisplayAlert(
                 "JSON Hatası",
-                "Kod geçerli bir JSON değil.",
-                "Tamam"
-            );
+                ex.Message,
+                "Tamam");
         }
     }
-
-    // =====================================================
-    // VALIDATE
-    // =====================================================
 
     private async void OnValidateClicked(
         object sender,
@@ -167,38 +182,57 @@ public partial class CodeEditorPage : ContentPage
         try
         {
             JsonDocument.Parse(
-                CodeEditor.Text
-            );
+                CodeEditor.Text);
 
             await DisplayAlert(
                 "✓ Geçerli",
                 "JSON dosyası geçerli.",
-                "Tamam"
-            );
+                "Tamam");
         }
         catch (Exception ex)
         {
             await DisplayAlert(
-                "✗ Hatalı JSON",
+                "✗ Geçersiz JSON",
                 ex.Message,
-                "Tamam"
-            );
+                "Tamam");
         }
     }
-
-    // =====================================================
-    // SAVE
-    // =====================================================
 
     private async void OnSaveClicked(
         object sender,
         EventArgs e)
     {
-        await DisplayAlert(
-            "Kaydedildi",
-            "Kod editörde kaydedildi.",
-            "Tamam"
-        );
+        string? path =
+            ProjectContext.CurrentFilePath;
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            await DisplayAlert(
+                "Hata",
+                "Kaydedilecek dosya bulunamadı.",
+                "Tamam");
+
+            return;
+        }
+
+        try
+        {
+            await File.WriteAllTextAsync(
+                path,
+                CodeEditor.Text ?? "");
+
+            await DisplayAlert(
+                "Kaydedildi ✓",
+                Path.GetFileName(path),
+                "Tamam");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert(
+                "Kaydetme Hatası",
+                ex.Message,
+                "Tamam");
+        }
     }
 
     private async void OnBackClicked(
