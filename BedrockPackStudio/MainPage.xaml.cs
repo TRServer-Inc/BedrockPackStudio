@@ -2,201 +2,261 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
-using Microsoft.Maui.ApplicationModel;
 
-namespace BedrockPackStudio
+namespace BedrockPackStudio;
+
+public partial class MainPage : ContentPage
 {
-    public partial class MainPage : ContentPage
+    private string _lastGeneratedPackPath = string.Empty;
+
+    public MainPage()
     {
-        private Entry _packNameEntry = null!;
-        private Editor _packDescEditor = null!;
-        private Entry _packVersionEntry = null!;
-        private Label _statusLabel = null!;
-        private string _lastGeneratedPackPath = string.Empty;
+        InitializeComponent();
 
-        public MainPage()
+        // Android için güvenli başlangıç
+        BackgroundColor = Color.FromArgb("#101114");
+    }
+
+    // =========================================================
+    // MENU
+    // =========================================================
+
+    private async void OnMenuClicked(object sender, EventArgs e)
+    {
+        string action = await DisplayActionSheet(
+            "Bedrock Pack Studio",
+            "İptal",
+            null,
+            "📂 Proje Aç",
+            "📦 Yeni Pack",
+            "🖼️ Texture Editor",
+            "</> Kod Editor",
+            "⚙️ Ayarlar"
+        );
+
+        switch (action)
         {
-            InitializeComponent();
-            BuildUI();
+            case "🖼️ Texture Editor":
+                OpenTextureEditor();
+                break;
+
+            case "</> Kod Editor":
+                OpenCodeEditor();
+                break;
+
+            case "📦 Yeni Pack":
+                await DisplayAlert(
+                    "Yeni Pack",
+                    "Yeni resource pack oluşturma sistemi hazırlanıyor.",
+                    "Tamam"
+                );
+                break;
         }
+    }
 
-        private void BuildUI()
+    private async void OnMoreClicked(object sender, EventArgs e)
+    {
+        await DisplayActionSheet(
+            "Seçenekler",
+            "Kapat",
+            null,
+            "ℹ️ Hakkında",
+            "🐛 Hata Raporla"
+        );
+    }
+
+    // =========================================================
+    // HOME
+    // =========================================================
+
+    private void OnHomeClicked(object sender, EventArgs e)
+    {
+        MainScroll.ScrollToAsync(
+            0,
+            0,
+            false
+        );
+    }
+
+    private async void OnPackClicked(object sender, EventArgs e)
+    {
+        await DisplayAlert(
+            "Pack",
+            "Pack Explorer sonraki aşamada burada olacak.",
+            "Tamam"
+        );
+    }
+
+    private async void OnSettingsClicked(object sender, EventArgs e)
+    {
+        await DisplayAlert(
+            "Ayarlar",
+            "Tema, Minecraft sürümü ve editör ayarları burada olacak.",
+            "Tamam"
+        );
+    }
+
+    // =========================================================
+    // FILES
+    // =========================================================
+
+    private async void OnFilesClicked(object sender, EventArgs e)
+    {
+        string action = await DisplayActionSheet(
+            "Dosyalar",
+            "İptal",
+            null,
+            "📁 textures",
+            "📄 manifest.json",
+            "🖼️ pack_icon.png"
+        );
+
+        if (action == "📄 manifest.json")
         {
-            BackgroundColor = Color.FromArgb("#121212");
+            OpenCodeEditor();
+        }
+        else if (action == "📁 textures")
+        {
+            OpenTextureEditor();
+        }
+    }
 
-            _packNameEntry = new Entry
-            {
-                Placeholder = "Örn: Custom Pack",
-                PlaceholderColor = Color.FromArgb("#666666"),
-                TextColor = Colors.White,
-                BackgroundColor = Color.FromArgb("#2D2D2D")
-            };
+    // =========================================================
+    // TEXTURE EDITOR
+    // =========================================================
 
-            _packDescEditor = new Editor
-            {
-                Placeholder = "Paket açıklamasını buraya yazın...",
-                PlaceholderColor = Color.FromArgb("#666666"),
-                TextColor = Colors.White,
-                BackgroundColor = Color.FromArgb("#2D2D2D"),
-                HeightRequest = 80
-            };
+    private void OnTextureClicked(object sender, EventArgs e)
+    {
+        OpenTextureEditor();
+    }
 
-            _packVersionEntry = new Entry
-            {
-                Text = "1.0.0",
-                TextColor = Colors.White,
-                BackgroundColor = Color.FromArgb("#2D2D2D")
-            };
+    private async void OpenTextureEditor()
+    {
+        await Navigation.PushAsync(
+            new TextureEditorPage()
+        );
+    }
 
-            var buildButton = new Button
-            {
-                Text = "📦 .mcpack Oluştur",
-                BackgroundColor = Color.FromArgb("#0E639C"),
-                TextColor = Colors.White,
-                FontAttributes = FontAttributes.Bold,
-                CornerRadius = 8,
-                HeightRequest = 50
-            };
-            buildButton.Clicked += OnBuildPackClicked;
+    // =========================================================
+    // CODE EDITOR
+    // =========================================================
 
-            var exportButton = new Button
-            {
-                Text = "📁 Minecraft'a Aktar / Paylaş",
-                BackgroundColor = Color.FromArgb("#3C3C3C"),
-                TextColor = Colors.White,
-                CornerRadius = 8,
-                HeightRequest = 45
-            };
-            exportButton.Clicked += OnExportClicked;
+    private void OnCodeClicked(object sender, EventArgs e)
+    {
+        OpenCodeEditor();
+    }
 
-            _statusLabel = new Label
-            {
-                Text = "Hazır.",
-                TextColor = Color.FromArgb("#4EC9B0"),
-                FontSize = 13,
-                HorizontalOptions = LayoutOptions.Center
-            };
+    private async void OpenCodeEditor()
+    {
+        await Navigation.PushAsync(
+            new CodeEditorPage()
+        );
+    }
 
-            Content = new ScrollView
+    // =========================================================
+    // MCPACK BUILD
+    // =========================================================
+
+    private async void OnBuildClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            string tempDir = Path.Combine(
+                FileSystem.CacheDirectory,
+                "Pack_" + Guid.NewGuid().ToString("N")
+            );
+
+            Directory.CreateDirectory(tempDir);
+
+            var manifest = new
             {
-                Content = new VerticalStackLayout
+                format_version = 2,
+
+                header = new
                 {
-                    Padding = 20,
-                    Spacing = 12,
-                    Children =
+                    name = "Test Pack",
+                    description = "Bedrock Pack Studio tarafından oluşturuldu.",
+                    uuid = Guid.NewGuid().ToString(),
+                    version = new[] { 1, 0, 0 },
+                    min_engine_version = new[] { 1, 20, 0 }
+                },
+
+                modules = new[]
+                {
+                    new
                     {
-                        new Label { Text = "Bedrock Pack Studio", FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Colors.White, HorizontalOptions = LayoutOptions.Center },
-                        new Label { Text = "Minecraft Bedrock Paketi Oluşturucu", FontSize = 12, TextColor = Color.FromArgb("#AAAAAA"), HorizontalOptions = LayoutOptions.Center },
-                        new Label { Text = "Paket Adı", TextColor = Color.FromArgb("#4EC9B0"), FontAttributes = FontAttributes.Bold },
-                        _packNameEntry,
-                        new Label { Text = "Paket Açıklaması", TextColor = Color.FromArgb("#4EC9B0"), FontAttributes = FontAttributes.Bold },
-                        _packDescEditor,
-                        new Label { Text = "Versiyon", TextColor = Color.FromArgb("#4EC9B0"), FontAttributes = FontAttributes.Bold },
-                        _packVersionEntry,
-                        buildButton,
-                        exportButton,
-                        _statusLabel
+                        type = "resources",
+                        uuid = Guid.NewGuid().ToString(),
+                        version = new[] { 1, 0, 0 }
                     }
                 }
             };
-        }
 
-        private async void OnBuildPackClicked(object? sender, EventArgs? e)
-        {
-            string packName = _packNameEntry.Text?.Trim() ?? "";
-            string packDesc = _packDescEditor.Text?.Trim() ?? "";
-            string packVersion = _packVersionEntry.Text?.Trim() ?? "1.0.0";
+            string manifestPath = Path.Combine(
+                tempDir,
+                "manifest.json"
+            );
 
-            if (string.IsNullOrEmpty(packName))
-            {
-                await DisplayAlert("Hata", "Paket adı boş olamaz!", "Tamam");
-                return;
-            }
-
-            try
-            {
-                _statusLabel.Text = "Oluşturuluyor...";
-                _statusLabel.TextColor = Colors.Yellow;
-
-                string tempDir = Path.Combine(FileSystem.CacheDirectory, "Pack_" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(tempDir);
-
-                var manifest = new
+            string json = JsonSerializer.Serialize(
+                manifest,
+                new JsonSerializerOptions
                 {
-                    format_version = 2,
-                    header = new
-                    {
-                        name = packName,
-                        description = packDesc,
-                        uuid = Guid.NewGuid().ToString(),
-                        version = ParseVersion(packVersion),
-                        min_engine_version = new[] { 1, 20, 0 }
-                    },
-                    modules = new[]
-                    {
-                        new
-                        {
-                            type = "resources",
-                            uuid = Guid.NewGuid().ToString(),
-                            version = ParseVersion(packVersion)
-                        }
-                    }
-                };
+                    WriteIndented = true
+                }
+            );
 
-                File.WriteAllText(Path.Combine(tempDir, "manifest.json"), JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true }));
+            await File.WriteAllTextAsync(
+                manifestPath,
+                json
+            );
 
-                string finalPath = Path.Combine(FileSystem.AppDataDirectory, $"{packName.Replace(" ", "_")}.mcpack");
-                if (File.Exists(finalPath)) File.Delete(finalPath);
+            string finalPath = Path.Combine(
+                FileSystem.AppDataDirectory,
+                "Test_Pack.mcpack"
+            );
 
-                ZipFile.CreateFromDirectory(tempDir, finalPath);
-                Directory.Delete(tempDir, true);
+            if (File.Exists(finalPath))
+                File.Delete(finalPath);
 
-                _lastGeneratedPackPath = finalPath;
-                _statusLabel.Text = "Başarıyla oluşturuldu!";
-                _statusLabel.TextColor = Colors.LightGreen;
+            ZipFile.CreateFromDirectory(
+                tempDir,
+                finalPath
+            );
 
-                await DisplayAlert("Başarılı", "Paket hazır!", "Tamam");
-            }
-            catch (Exception ex)
-            {
-                _statusLabel.Text = "Hata oluştu!";
-                _statusLabel.TextColor = Colors.Red;
-                await DisplayAlert("Hata", ex.Message, "Tamam");
-            }
-        }
+            Directory.Delete(
+                tempDir,
+                true
+            );
 
-        private async void OnExportClicked(object? sender, EventArgs? e)
-        {
-            if (string.IsNullOrEmpty(_lastGeneratedPackPath) || !File.Exists(_lastGeneratedPackPath))
-            {
-                await DisplayAlert("Uyarı", "Önce paket oluşturmalısın!", "Tamam");
-                return;
-            }
+            _lastGeneratedPackPath = finalPath;
 
-            try
-            {
-                await Share.Default.RequestAsync(new ShareFileRequest
+            PackStatusLabel.Text =
+                "✓ .mcpack hazır";
+
+            PackStatusLabel.TextColor =
+                Color.FromArgb("#4EC9B0");
+
+            await DisplayAlert(
+                "Başarılı 🎉",
+                "Test_Pack.mcpack oluşturuldu!",
+                "Tamam"
+            );
+
+            await Share.Default.RequestAsync(
+                new ShareFileRequest
                 {
                     Title = "Minecraft'a Aktar",
-                    File = new ShareFile(_lastGeneratedPackPath)
-                });
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Hata", ex.Message, "Tamam");
-            }
+                    File = new ShareFile(finalPath)
+                }
+            );
         }
-
-        private int[] ParseVersion(string v)
+        catch (Exception ex)
         {
-            try
-            {
-                var p = v.Split('.');
-                return new[] { int.Parse(p[0]), int.Parse(p[1]), int.Parse(p[2]) };
-            }
-            catch { return new[] { 1, 0, 0 }; }
+            await DisplayAlert(
+                "Hata",
+                ex.Message,
+                "Tamam"
+            );
         }
     }
 }
