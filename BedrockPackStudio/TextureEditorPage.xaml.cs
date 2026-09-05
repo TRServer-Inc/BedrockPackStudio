@@ -1,13 +1,19 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Maui.Graphics;
 
 namespace BedrockPackStudio;
 
 public partial class TextureEditorPage : ContentPage
 {
-    private PixelData _pixelData;
+    private readonly PixelData _pixelData;
 
-    private readonly Stack<Color[,]> _undo = new();
-    private readonly Stack<Color[,]> _redo = new();
+    private readonly Stack<Color[,]> _undo =
+        new();
+
+    private readonly Stack<Color[,]> _redo =
+        new();
 
     private Color _currentColor =
         Colors.White;
@@ -15,14 +21,14 @@ public partial class TextureEditorPage : ContentPage
     private EditTool _tool =
         EditTool.Pen;
 
-    private bool _grid = true;
-
     public TextureEditorPage()
     {
         InitializeComponent();
 
         _pixelData =
-            new PixelData(16, 16);
+            new PixelData(
+                16,
+                16);
 
         PixelCanvas.Drawable =
             new PixelDrawable(
@@ -31,24 +37,28 @@ public partial class TextureEditorPage : ContentPage
         PixelCanvas.StartInteraction +=
             OnCanvasInteraction;
 
-        LoadTexture();
+        LoadTextureInfo();
     }
 
-    private async void LoadTexture()
+    // =========================================================
+    // LOAD
+    // =========================================================
+
+    private void LoadTextureInfo()
     {
         string? path =
             ProjectContext.CurrentTexturePath;
 
-        if (string.IsNullOrWhiteSpace(path) ||
-            !File.Exists(path))
+        if (string.IsNullOrWhiteSpace(path))
         {
+            FileNameLabel.Text =
+                "Yeni Texture";
+
             return;
         }
 
         FileNameLabel.Text =
-            Path.GetFileName(path);
-
-        await Task.CompletedTask;
+            System.IO.Path.GetFileName(path);
     }
 
     // =========================================================
@@ -60,44 +70,72 @@ public partial class TextureEditorPage : ContentPage
         TouchEventArgs e)
     {
         if (e.Touches == null ||
-            e.Touches.Count == 0)
+            !e.Touches.Any())
+        {
             return;
+        }
 
         var touch =
-            e.Touches[0];
+            e.Touches.First();
 
-        float xPosition =
+        float canvasX =
             touch.X;
 
-        float yPosition =
+        float canvasY =
             touch.Y;
+
+        float width =
+            (float)PixelCanvas.Width;
+
+        float height =
+            (float)PixelCanvas.Height;
+
+        if (width <= 0 ||
+            height <= 0)
+        {
+            return;
+        }
 
         float pixelSize =
             Math.Min(
-                (float)PixelCanvas.Width / _pixelData.Width,
-                (float)PixelCanvas.Height / _pixelData.Height);
+                width / _pixelData.Width,
+                height / _pixelData.Height);
+
+        float canvasWidth =
+            pixelSize *
+            _pixelData.Width;
+
+        float canvasHeight =
+            pixelSize *
+            _pixelData.Height;
 
         float startX =
-            ((float)PixelCanvas.Width -
-             pixelSize * _pixelData.Width) / 2f;
+            (width -
+             canvasWidth) /
+            2f;
 
         float startY =
-            ((float)PixelCanvas.Height -
-             pixelSize * _pixelData.Height) / 2f;
+            (height -
+             canvasHeight) /
+            2f;
 
         int x =
-            (int)((xPosition - startX) /
-                  pixelSize);
+            (int)
+            ((canvasX - startX) /
+             pixelSize);
 
         int y =
-            (int)((yPosition - startY) /
-                  pixelSize);
+            (int)
+            ((canvasY - startY) /
+             pixelSize);
 
         if (x < 0 ||
             y < 0 ||
             x >= _pixelData.Width ||
             y >= _pixelData.Height)
+        {
             return;
+        }
 
         if (_tool == EditTool.Picker)
         {
@@ -107,7 +145,8 @@ public partial class TextureEditorPage : ContentPage
                     y);
 
             ColorEntry.Text =
-                ToHex(_currentColor);
+                ToHex(
+                    _currentColor);
 
             _tool =
                 EditTool.Pen;
@@ -119,19 +158,31 @@ public partial class TextureEditorPage : ContentPage
 
         SaveUndo();
 
-        if (_tool == EditTool.Pen)
+        switch (_tool)
         {
-            _pixelData.Set(
-                x,
-                y,
-                _currentColor);
-        }
-        else if (_tool == EditTool.Eraser)
-        {
-            _pixelData.Set(
-                x,
-                y,
-                Colors.Transparent);
+            case EditTool.Pen:
+
+                _pixelData.Set(
+                    x,
+                    y,
+                    _currentColor);
+
+                break;
+
+            case EditTool.Eraser:
+
+                _pixelData.Set(
+                    x,
+                    y,
+                    Colors.Transparent);
+
+                break;
+
+            case EditTool.Fill:
+
+                FillCanvas();
+
+                break;
         }
 
         PixelCanvas.Invalidate();
@@ -157,20 +208,19 @@ public partial class TextureEditorPage : ContentPage
             EditTool.Eraser;
     }
 
-    private void OnPickerClicked(
-        object sender,
-        EventArgs e)
-    {
-        _tool =
-            EditTool.Picker;
-    }
-
     private void OnFillClicked(
         object sender,
         EventArgs e)
     {
         SaveUndo();
 
+        FillCanvas();
+
+        PixelCanvas.Invalidate();
+    }
+
+    private void FillCanvas()
+    {
         for (int y = 0;
              y < _pixelData.Height;
              y++)
@@ -185,8 +235,14 @@ public partial class TextureEditorPage : ContentPage
                     _currentColor);
             }
         }
+    }
 
-        PixelCanvas.Invalidate();
+    private void OnPickerClicked(
+        object sender,
+        EventArgs e)
+    {
+        _tool =
+            EditTool.Picker;
     }
 
     private void OnColorClicked(
@@ -200,29 +256,35 @@ public partial class TextureEditorPage : ContentPage
         object sender,
         EventArgs e)
     {
+        string text =
+            ColorEntry.Text?
+                .Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
         try
         {
             _currentColor =
                 Color.FromArgb(
-                    ColorEntry.Text
-                        .Trim());
+                    text);
 
             await DisplayAlert(
                 "Renk",
-                $"Seçilen renk: {ColorEntry.Text}",
+                $"Seçilen renk: {text}",
                 "Tamam");
         }
         catch
         {
             await DisplayAlert(
                 "Hatalı Renk",
-                "Örnek: #FF0000 veya #FF0000FF",
+                "Örnek: #FF0000 veya #FFFFFFFF",
                 "Tamam");
         }
     }
 
     // =========================================================
-    // UNDO / REDO
+    // UNDO
     // =========================================================
 
     private void SaveUndo()
@@ -243,8 +305,11 @@ public partial class TextureEditorPage : ContentPage
         _redo.Push(
             _pixelData.Clone());
 
+        Color[,] previous =
+            _undo.Pop();
+
         _pixelData.CopyFrom(
-            _undo.Pop());
+            previous);
 
         PixelCanvas.Invalidate();
     }
@@ -259,8 +324,11 @@ public partial class TextureEditorPage : ContentPage
         _undo.Push(
             _pixelData.Clone());
 
+        Color[,] next =
+            _redo.Pop();
+
         _pixelData.CopyFrom(
-            _redo.Pop());
+            next);
 
         PixelCanvas.Invalidate();
     }
@@ -273,16 +341,14 @@ public partial class TextureEditorPage : ContentPage
         object sender,
         EventArgs e)
     {
-        _grid = !_grid;
-
         if (PixelCanvas.Drawable
             is PixelDrawable drawable)
         {
             drawable.ShowGrid =
-                _grid;
-        }
+                !drawable.ShowGrid;
 
-        PixelCanvas.Invalidate();
+            PixelCanvas.Invalidate();
+        }
     }
 
     // =========================================================
@@ -300,26 +366,21 @@ public partial class TextureEditorPage : ContentPage
         {
             await DisplayAlert(
                 "Texture",
-                "Kaydedilecek texture seçilmemiş.",
+                "Kaydedilecek texture seçilmedi.",
                 "Tamam");
 
             return;
         }
 
-        /*
-         * Pixel buffer bellekte tutuluyor.
-         * PNG export için Android tarafında
-         * native bitmap kullanılması gerekiyor.
-         *
-         * Şimdilik editör durumunu kaybetmemek
-         * için kullanıcıya bilgi veriyoruz.
-         */
-
         await DisplayAlert(
             "Texture",
-            "Pixel düzenlemeleri bellekte tutuluyor. PNG export katmanı bir sonraki adımda native Android Bitmap ile bağlanabilir.",
+            "Pixel düzenlemeleri bellekte tutuldu.",
             "Tamam");
     }
+
+    // =========================================================
+    // BACK
+    // =========================================================
 
     private async void OnBackClicked(
         object sender,
@@ -328,17 +389,24 @@ public partial class TextureEditorPage : ContentPage
         await Navigation.PopAsync();
     }
 
+    // =========================================================
+    // COLOR
+    // =========================================================
+
     private static string ToHex(
         Color color)
     {
         int r =
-            (int)(color.Red * 255);
+            (int)
+            (color.Red * 255);
 
         int g =
-            (int)(color.Green * 255);
+            (int)
+            (color.Green * 255);
 
         int b =
-            (int)(color.Blue * 255);
+            (int)
+            (color.Blue * 255);
 
         return
             $"#{r:X2}{g:X2}{b:X2}";
