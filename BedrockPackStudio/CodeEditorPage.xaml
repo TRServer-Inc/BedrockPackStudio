@@ -4,54 +4,57 @@
     x:Class="BedrockPackStudio.CodeEditorPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    BackgroundColor="#101114"
+    BackgroundColor="#0D0F12"
     NavigationPage.HasNavigationBar="False">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- HEADER -->
-
         <Grid
             Grid.Row="0"
-            HeightRequest="60"
-            Padding="10"
-            BackgroundColor="#181A1F"
+            HeightRequest="62"
+            Padding="8,0"
+            BackgroundColor="#17191E"
             ColumnDefinitions="Auto,*,Auto">
 
             <Button
                 Text="‹"
                 FontSize="32"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
                 Clicked="OnBackClicked"/>
 
-            <Label
+            <VerticalStackLayout
                 Grid.Column="1"
-                Text="manifest.json"
-                FontSize="17"
-                FontAttributes="Bold"
-                TextColor="White"
-                VerticalOptions="Center"/>
+                VerticalOptions="Center">
+
+                <Label
+                    x:Name="FileNameLabel"
+                    Text="Kod Editörü"
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"/>
+
+                <Label
+                    Text="JSON / TXT / LANG"
+                    FontSize="10"
+                    TextColor="#858A94"/>
+            </VerticalStackLayout>
 
             <Button
                 Grid.Column="2"
                 Text="💾"
                 FontSize="21"
+                WidthRequest="52"
                 TextColor="White"
                 BackgroundColor="Transparent"
                 Clicked="OnSaveClicked"/>
-
         </Grid>
-
-
-        <!-- EDITOR -->
 
         <Grid
             Grid.Row="1"
-            ColumnDefinitions="42,*"
-            BackgroundColor="#0D0E10">
-
-            <!-- LINE NUMBERS -->
+            ColumnDefinitions="38,*"
+            BackgroundColor="#0D0F12">
 
             <ScrollView
                 Grid.Column="0"
@@ -59,75 +62,67 @@
 
                 <Label
                     x:Name="LineNumbers"
-                    Text="1&#x0a;2&#x0a;3&#x0a;4&#x0a;5&#x0a;6&#x0a;7&#x0a;8&#x0a;9&#x0a;10&#x0a;11&#x0a;12&#x0a;13&#x0a;14&#x0a;15"
+                    Text="1"
                     TextColor="#626873"
                     FontFamily="monospace"
-                    FontSize="13"
-                    Padding="8,14"/>
+                    FontSize="12"
+                    HorizontalTextAlignment="End"
+                    Padding="6,12"/>
             </ScrollView>
 
-
-            <!-- CODE -->
-
-            <ScrollView
+            <Editor
                 Grid.Column="1"
-                HorizontalScrollBarVisibility="Always"
-                VerticalScrollBarVisibility="Always">
-
-                <Editor
-                    x:Name="CodeEditor"
-                    TextColor="#D4D4D4"
-                    BackgroundColor="#0D0E10"
-                    FontFamily="monospace"
-                    FontSize="13"
-                    AutoSize="TextChanges"
-                    TextChanged="OnTextChanged"
-                    Keyboard="Text"/>
-            </ScrollView>
+                x:Name="CodeEditor"
+                TextColor="#D4D4D4"
+                BackgroundColor="#0D0F12"
+                FontFamily="monospace"
+                FontSize="13"
+                AutoSize="TextChanges"
+                TextChanged="OnTextChanged"
+                VerticalTextAlignment="Start"/>
 
         </Grid>
 
-
-        <!-- TOOLBAR -->
-
-        <HorizontalStackLayout
+        <ScrollView
             Grid.Row="2"
-            HeightRequest="62"
-            Padding="8"
-            Spacing="8"
-            BackgroundColor="#181A1F">
+            Orientation="Horizontal"
+            HorizontalScrollBarVisibility="Never">
 
-            <Button
-                Text="↶"
-                FontSize="21"
-                WidthRequest="50"
-                BackgroundColor="#20242B"
-                TextColor="White"
-                Clicked="OnUndoClicked"/>
+            <HorizontalStackLayout
+                Padding="8"
+                Spacing="8"
+                BackgroundColor="#17191E">
 
-            <Button
-                Text="↷"
-                FontSize="21"
-                WidthRequest="50"
-                BackgroundColor="#20242B"
-                TextColor="White"
-                Clicked="OnRedoClicked"/>
+                <Button
+                    Text="↶"
+                    FontSize="20"
+                    WidthRequest="52"
+                    BackgroundColor="#20242B"
+                    TextColor="White"
+                    Clicked="OnUndoClicked"/>
 
-            <Button
-                Text="{ }"
-                WidthRequest="55"
-                BackgroundColor="#20242B"
-                TextColor="White"
-                Clicked="OnFormatClicked"/>
+                <Button
+                    Text="↷"
+                    FontSize="20"
+                    WidthRequest="52"
+                    BackgroundColor="#20242B"
+                    TextColor="White"
+                    Clicked="OnRedoClicked"/>
 
-            <Button
-                Text="✓ JSON"
-                WidthRequest="75"
-                BackgroundColor="#176B43"
-                TextColor="White"
-                Clicked="OnValidateClicked"/>
+                <Button
+                    Text="{} Format"
+                    BackgroundColor="#20242B"
+                    TextColor="White"
+                    Clicked="OnFormatClicked"/>
 
-        </HorizontalStackLayout>
+                <Button
+                    Text="✓ JSON"
+                    BackgroundColor="#176B43"
+                    TextColor="White"
+                    Clicked="OnValidateClicked"/>
+
+            </HorizontalStackLayout>
+        </ScrollView>
 
     </Grid>
 
