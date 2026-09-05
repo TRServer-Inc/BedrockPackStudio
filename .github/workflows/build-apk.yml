@@ -20,7 +20,7 @@ jobs:
       - name: .NET SDK Kurulumu
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Android Workload Kurulumu
         run: dotnet workload install android
@@ -35,7 +35,7 @@ jobs:
         run: dotnet restore
 
       - name: APK Derle (Release)
-        run: dotnet build -c Release -f net8.0-android --no-restore
+        run: dotnet build -c Release -f net9.0-android --no-restore
 
       - name: APK Dosyasını Çıktı Olarak Üret (Artifact)
         uses: actions/upload-artifact@v4
