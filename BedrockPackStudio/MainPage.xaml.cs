@@ -103,7 +103,7 @@ namespace BedrockPackStudio
             };
         }
 
-        private async void OnBuildPackClicked(object sender, EventArgs e)
+        private async void OnBuildPackClicked(object? sender, EventArgs? e)
         {
             string packName = _packNameEntry.Text?.Trim() ?? "";
             string packDesc = _packDescEditor.Text?.Trim() ?? "";
@@ -167,7 +167,7 @@ namespace BedrockPackStudio
             }
         }
 
-        private async void OnExportClicked(object sender, EventArgs e)
+        private async void OnExportClicked(object? sender, EventArgs? e)
         {
             if (string.IsNullOrEmpty(_lastGeneratedPackPath) || !File.Exists(_lastGeneratedPackPath))
             {
