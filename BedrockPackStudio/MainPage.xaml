@@ -2,54 +2,63 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="BedrockPackStudio.MainPage"
-             BackgroundColor="#1E1E1E">
+             BackgroundColor="#121212">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
-            <!-- Başlık -->
-            <Label Text="Bedrock Pack Studio"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   TextColor="White"
-                   HorizontalOptions="Center" />
+            <!-- Başlık Kartı -->
+            <Border BackgroundColor="#1E1E1E" Stroke="#2D2D2D" Padding="15">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="Bedrock Pack Studio"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                    <Label Text="Minecraft Bedrock Paketi Oluşturucu"
+                           FontSize="12"
+                           TextColor="#AAAAAA"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Minecraft Bedrock Paketi Oluşturucu"
-                   FontSize="14"
-                   TextColor="#AAAAAA"
-                   HorizontalOptions="Center" />
-
-            <!-- Paket Bilgileri Formu -->
-            <Frame BackgroundColor="#2D2D2D" BorderColor="#3D3D3D" CornerRadius="10" Padding="15">
-                <VerticalStackLayout Spacing="10">
+            <!-- Form Alanı -->
+            <Border BackgroundColor="#1E1E1E" Stroke="#2D2D2D" Padding="15">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
                     
-                    <Label Text="Paket Adı" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Paket Adı" TextColor="#4EC9B0" FontAttributes="Bold" />
                     <Entry x:Name="PackNameEntry" 
-                           Placeholder="Örn: My Custom Pack" 
-                           PlaceholderColor="#888888" 
+                           Placeholder="Örn: Custom Texture Pack" 
+                           PlaceholderColor="#666666" 
                            TextColor="White" 
-                           BackgroundColor="#1E1E1E" />
+                           BackgroundColor="#2D2D2D" />
 
-                    <Label Text="Paket Açıklaması" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Paket Açıklaması" TextColor="#4EC9B0" FontAttributes="Bold" />
                     <Editor x:Name="PackDescriptionEditor" 
-                            Placeholder="Paket detaylarını girin..." 
-                            PlaceholderColor="#888888" 
+                            Placeholder="Paket detaylarını buraya yazın..." 
+                            PlaceholderColor="#666666" 
                             TextColor="White" 
-                            BackgroundColor="#1E1E1E" 
-                            HeightRequest="80" />
+                            BackgroundColor="#2D2D2D" 
+                            HeightRequest="90" />
 
-                    <Label Text="Versiyon" TextColor="White" FontAttributes="Bold" />
+                    <Label Text="Versiyon (Örn: 1.0.0)" TextColor="#4EC9B0" FontAttributes="Bold" />
                     <Entry x:Name="PackVersionEntry" 
                            Text="1.0.0" 
                            TextColor="White" 
-                           BackgroundColor="#1E1E1E" />
+                           BackgroundColor="#2D2D2D" />
 
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- Aksiyon Butonları -->
             <Button x:Name="BuildPackButton"
-                    Text="📦 .mcpack / .zip Oluştur"
+                    Text="📦 .mcpack Oluştur"
                     BackgroundColor="#0E639C"
                     TextColor="White"
                     FontAttributes="Bold"
@@ -58,20 +67,20 @@
                     Clicked="OnBuildPackClicked" />
 
             <Button x:Name="ExportButton"
-                    Text="📁 Çıktı Klasörünü Aç / Paylaş"
+                    Text="📁 Minecraft'a Aktar / Paylaş"
                     BackgroundColor="#3C3C3C"
                     TextColor="White"
                     CornerRadius="8"
                     HeightRequest="45"
                     Clicked="OnExportClicked" />
 
-            <!-- Durum Bildirimi -->
+            <!-- Durum Yazısı -->
             <Label x:Name="StatusLabel"
                    Text="Hazır."
                    TextColor="#4EC9B0"
-                   FontSize="14"
+                   FontSize="13"
                    HorizontalOptions="Center"
-                   Margin="0,10,0,0" />
+                   Margin="0,5,0,0" />
 
         </VerticalStackLayout>
     </ScrollView>
