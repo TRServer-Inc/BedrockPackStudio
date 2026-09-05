@@ -13,11 +13,15 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- android uygulama kimlik bilgileri -->
+		<!-- android uygulama kimlik ve launcher bilgileri -->
 		<ApplicationId>com.trserverinc.bedrockpackstudio</ApplicationId>
 		<ApplicationTitle>Bedrock Pack Studio</ApplicationTitle>
 		<ApplicationVersion>1</ApplicationVersion>
 		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+		
+		<!-- launcher simgesi ve manifest eşleşmesi -->
+		<AndroidApplication>true</AndroidApplication>
+		<AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -26,6 +30,9 @@
 	</ItemGroup>
 
 	<!-- android derlemesinde winforms dosyalarını hariç tut -->
+	<ItemGroup Condition="'$(TargetFramework)' != 'net9.0-android'">
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' != 'net9.0-windows10.0.19041.0'">
 		<Compile Remove="Form1.cs" />
 		<Compile Remove="Form1.Designer.cs" />
