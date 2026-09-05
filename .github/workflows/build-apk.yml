@@ -35,7 +35,7 @@ jobs:
         run: dotnet restore
 
       - name: APK Derle ve Yayınla
-        run: dotnet publish -c Release -f net9.0-android --no-restore -o ./publish-output
+        run: dotnet publish BedrockPackStudio/BedrockPackStudio.csproj -c Release -f net9.0-android --no-restore -o ./publish-output
 
       - name: APK Dosyasını Çıktı Olarak Üret (Artifact)
         uses: actions/upload-artifact@v4
